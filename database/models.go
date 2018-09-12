@@ -22,18 +22,12 @@ import (
 	"github.com/coreos/clair/pkg/pagination"
 )
 
-// Processors are extentions to scan a layer's content.
-type Processors struct {
-	Listers   []string
-	Detectors []string
-}
-
 // Ancestry is a manifest that keeps all layers in an image in order.
 type Ancestry struct {
 	Name string
 	// ProcessedBy contains the processors that are used when computing the
 	// content of this ancestry.
-	ProcessedBy Processors
+	ProcessedBy []Detector
 	// Layers should be ordered and i_th layer is the parent of i+1_th layer in
 	// the slice.
 	Layers []AncestryLayer
@@ -53,7 +47,7 @@ type Layer struct {
 	// Hash is content hash of the layer.
 	Hash string
 	// ProcessedBy contains the processors that processed this layer.
-	ProcessedBy Processors
+	ProcessedBy []Detector
 }
 
 // LayerWithContent is a layer with its detected namespaces and features by
@@ -71,6 +65,7 @@ type LayerWithContent struct {
 type Namespace struct {
 	Name          string
 	VersionFormat string
+	DetectedBy    Detector
 }
 
 // Feature represents a package detected in a layer but the namespace is not
@@ -83,6 +78,7 @@ type Feature struct {
 	Name          string
 	Version       string
 	VersionFormat string
+	DetectedBy    Detector
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected
