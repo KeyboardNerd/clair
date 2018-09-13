@@ -38,7 +38,11 @@ var (
 type detector struct{}
 
 func init() {
-	featurens.RegisterDetector("lsb-release", &detector{})
+	featurens.RegisterDetector(&detector{})
+}
+
+func (d detector) Info() database.Detector {
+	return database.NewNamespaceDetector("lsb-release", "1.0")
 }
 
 func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {

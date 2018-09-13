@@ -17,6 +17,7 @@
 package featurens
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -44,25 +45,30 @@ type Detector interface {
 	//
 	// Filenames must not begin with "/".
 	RequiredFilenames() []string
+
+	// Version provides the detector's version.
+	Info() database.Detector
 }
 
 // RegisterDetector makes a detector available by the provided name.
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Detector is nil, this function panics.
-func RegisterDetector(name string, d Detector) {
-	if name == "" {
-		panic("namespace: could not register a Detector with an empty name")
-	}
+func RegisterDetector(d Detector) {
 	if d == nil {
 		panic("namespace: could not register a nil Detector")
+	}
+
+	if !d.Info().Valid() {
+		panic("featurefmt: could not register a lister without valid version")
 	}
 
 	detectorsM.Lock()
 	defer detectorsM.Unlock()
 
-	if _, dup := detectors[name]; dup {
-		panic("namespace: RegisterDetector called twice for " + name)
+	name := d.Info().String()
+	if _, ok := detectors[name]; ok {
+		panic(fmt.Sprintf("featurefmt: Duplicated Namespace detector '%s' is not allowed.", name))
 	}
 
 	detectors[name] = d
@@ -112,11 +118,11 @@ func RequiredFilenames(detectorNames []string) (files []string) {
 
 // ListDetectors returns the names of all registered namespace detectors.
 func ListDetectors() []string {
-	r := []string{}
-	for name := range detectors {
-		r = append(r, name)
+	d := make([]database.Detector, 0, len(detectors))
+	for _, l := range detectors {
+		d = append(d, l.Info())
 	}
-	return r
+	return d
 }
 
 // TestData represents the data used to test an implementation of Detector.

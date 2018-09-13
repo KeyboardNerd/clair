@@ -29,10 +29,14 @@ import (
 )
 
 func init() {
-	featurefmt.RegisterLister("apk", dpkg.ParserName, &lister{})
+	featurefmt.RegisterLister(&lister{})
 }
 
 type lister struct{}
+
+func (l lister) Info() database.Detector {
+	return database.NewFeatureDetector("apk", "1.0")
+}
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	file, exists := files["lib/apk/db/installed"]

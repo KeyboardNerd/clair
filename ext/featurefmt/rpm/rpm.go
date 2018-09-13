@@ -35,7 +35,11 @@ import (
 type lister struct{}
 
 func init() {
-	featurefmt.RegisterLister("rpm", rpm.ParserName, &lister{})
+	featurefmt.RegisterLister(&lister{})
+}
+
+func (l lister) Info() database.Detector {
+	return database.NewFeatureDetector("rpm", "1.0")
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {

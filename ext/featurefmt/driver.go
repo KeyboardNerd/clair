@@ -17,6 +17,7 @@
 package featurefmt
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
@@ -31,9 +32,8 @@ import (
 )
 
 var (
-	listersM             sync.RWMutex
-	listers              = make(map[string]Lister)
-	versionfmtListerName = make(map[string][]string)
+	listersM sync.RWMutex
+	listers  = make(map[string]Lister)
 )
 
 // Lister represents an ability to list the features present in an image layer.
@@ -46,29 +46,33 @@ type Lister interface {
 	//
 	// Filenames must not begin with "/".
 	RequiredFilenames() []string
+
+	// Version provides the detector's version.
+	Info() database.Detector
 }
 
 // RegisterLister makes a Lister available by the provided name.
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Lister is nil, this function panics.
-func RegisterLister(name string, versionfmt string, l Lister) {
-	if name == "" {
-		panic("featurefmt: could not register a Lister with an empty name")
-	}
+func RegisterLister(l Lister) {
 	if l == nil {
 		panic("featurefmt: could not register a nil Lister")
+	}
+
+	if !l.Info().Valid() {
+		panic("featurefmt: could not register a lister without valid version")
 	}
 
 	listersM.Lock()
 	defer listersM.Unlock()
 
-	if _, dup := listers[name]; dup {
-		panic("featurefmt: RegisterLister called twice for " + name)
+	name := l.Info().String()
+	if _, ok := listers[name]; ok {
+		panic(fmt.Sprintf("featurefmt: Duplicated Feature detector '%s' is not allowed.", name))
 	}
 
 	listers[name] = l
-	versionfmtListerName[versionfmt] = append(versionfmtListerName[versionfmt], name)
 }
 
 // ListFeatures produces the list of Features in an image layer using
@@ -108,12 +112,12 @@ func RequiredFilenames(listerNames []string) (files []string) {
 }
 
 // ListListers returns the names of all the registered feature listers.
-func ListListers() []string {
-	r := []string{}
-	for name := range listers {
-		r = append(r, name)
+func ListListers() []database.Detector {
+	d := make([]database.Detector, 0, len(listers))
+	for _, l := range listers {
+		d = append(d, l.Info())
 	}
-	return r
+	return d
 }
 
 // TestData represents the data used to test an implementation of Lister.

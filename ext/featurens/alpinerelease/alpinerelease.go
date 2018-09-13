@@ -35,11 +35,15 @@ const (
 
 var versionRegexp = regexp.MustCompile(`^(\d)+\.(\d)+\.(\d)+$`)
 
+type detector struct{}
+
 func init() {
 	featurens.RegisterDetector("alpine-release", &detector{})
 }
 
-type detector struct{}
+func (d detector) Info() database.Detector {
+	return database.NewNamespaceDetector("alpine-release", "1.0")
+}
 
 func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	file, exists := files[alpineReleasePath]
