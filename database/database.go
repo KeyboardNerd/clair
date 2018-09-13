@@ -125,7 +125,7 @@ type Session interface {
 	//
 	// The layer, namespaces and features are expected to be already existing
 	// in the database.
-	PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy []Detector) error
 
 	// FindLayer returns a layer with all detected features and
 	// namespaces.
