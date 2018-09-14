@@ -64,7 +64,7 @@ func (tx *pgSession) persistLayer(hash string) (int64, error) {
 // PersistLayer relates layer identified by hash with namespaces,
 // features and processors provided. If the layer, namespaces, features are not
 // in database, the function returns an error.
-func (tx *pgSession) PersistLayer(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
+func (tx *pgSession) PersistLayer(hash string, namespaces []database.Namespace, features []database.Feature, processedBy []database.Detector) error {
 	if hash == "" {
 		return commonerr.NewBadRequestError("Empty layer hash is not allowed")
 	}
@@ -201,7 +201,7 @@ func (tx *pgSession) persistLayerNamespace(id int64, namespaces []database.Names
 	return nil
 }
 
-func (tx *pgSession) persistProcessors(listerQuery, listerQueryName, detectorQuery, detectorQueryName string, id int64, processors database.Processors) error {
+func (tx *pgSession) persistDetectors(listerQuery, listerQueryName, detectorQuery, detectorQueryName string, id int64, processors []database.Detector) error {
 	stmt, err := tx.Prepare(listerQuery)
 	if err != nil {
 		return handleError(listerQueryName, err)
@@ -280,7 +280,7 @@ func (tx *pgSession) findLayerFeatures(layerID int64) ([]database.Feature, error
 func (tx *pgSession) findLayer(hash string) (database.LayerMetadata, int64, bool, error) {
 	var (
 		layerID int64
-		layer   = database.LayerMetadata{Hash: hash, ProcessedBy: database.Processors{}}
+		layer   = database.LayerMetadata{Hash: hash, ProcessedBy: []database.Detector{}}
 	)
 
 	if hash == "" {
@@ -295,21 +295,21 @@ func (tx *pgSession) findLayer(hash string) (database.LayerMetadata, int64, bool
 		return layer, layerID, false, err
 	}
 
-	layer.ProcessedBy, err = tx.findLayerProcessors(layerID)
+	layer.ProcessedBy, err = tx.findLayerDetectors(layerID)
 	return layer, layerID, true, err
 }
 
-func (tx *pgSession) findLayerProcessors(id int64) (database.Processors, error) {
+func (tx *pgSession) findLayerDetectors(id int64) ([]database.Detector, error) {
 	var (
 		err        error
-		processors database.Processors
+		processors []database.Detector
 	)
 
-	if processors.Detectors, err = tx.findProcessors(searchLayerDetectors, id); err != nil {
+	if processors.Detectors, err = tx.findDetectors(searchLayerDetectors, id); err != nil {
 		return processors, handleError("searchLayerDetectors", err)
 	}
 
-	if processors.Listers, err = tx.findProcessors(searchLayerListers, id); err != nil {
+	if processors.Listers, err = tx.findDetectors(searchLayerListers, id); err != nil {
 		return processors, handleError("searchLayerListers", err)
 	}
 

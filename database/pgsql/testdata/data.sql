@@ -1,14 +1,28 @@
+-- initialize entities
 INSERT INTO namespace (id, name, version_format) VALUES
-(1, 'debian:7', 'dpkg'),
-(2, 'debian:8', 'dpkg'),
-(3, 'fake:1.0', 'rpm');
+  (1, 'debian:7', 'dpkg'),
+  (2, 'debian:8', 'dpkg'),
+  (3, 'fake:1.0', 'rpm');
 
 INSERT INTO feature (id, name, version, version_format) VALUES
-(1, 'wechat', '0.5', 'dpkg'),
-(2, 'openssl', '1.0', 'dpkg'),
-(3, 'openssl', '2.0', 'dpkg'),
-(4, 'fake', '2.0', 'rpm');
+  (1, 'wechat', '0.5', 'dpkg'),
+  (2, 'openssl', '1.0', 'dpkg'),
+  (3, 'openssl', '2.0', 'dpkg'),
+  (4, 'fake', '2.0', 'rpm');
 
+INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
+  (1, 1, 1), -- wechat 0.5, debian:7
+  (2, 2, 1), -- openssl 1.0, debian:7
+  (3, 2, 2), -- openssl 1.0, debian:8
+  (4, 3, 1); -- openssl 2.0, debian:7
+
+INSERT INTO detector(id, name, version, type) VALUES
+  (1, 'os-release', '1.0', 'namespace'),
+  (2, 'dpkg', '1.0', 'feature'),
+  (3, 'rpm', '1.0', 'feature'),
+  (4, 'apt-sources', '1.0', 'namespace');
+
+-- initialize layers
 INSERT INTO layer (id, hash) VALUES
   (1, 'layer-0'), -- blank
   (2, 'layer-1'), -- debian:7; wechat 0.5, openssl 1.0
@@ -17,41 +31,39 @@ INSERT INTO layer (id, hash) VALUES
   (5, 'layer-3b'),-- debian:8; wechat 0.5, openssl 1.0
   (6, 'layer-4'); -- debian:7, fake:1.0; openssl 2.0 (debian), fake 2.0 (fake)
 
-INSERT INTO layer_namespace(id, layer_id, namespace_id) VALUES
-  (1, 2, 1),
-  (2, 3, 1),
-  (3, 4, 1),
-  (4, 5, 2),
-  (5, 6, 1),
-  (6, 6, 3);
+INSERT INTO layer_namespace(id, layer_id, namespace_id, detector_id) VALUES
+  (1, 2, 1, 1), -- layer-1: debian:7
+  (2, 3, 1, 1), -- layer-2: debian:7
+  (3, 4, 1, 1), -- layer-3a: debian:7
+  (4, 5, 2, 1), -- layer-3b: debian:8
+  (5, 6, 1, 1), -- layer-4: debian:7
+  (6, 6, 3, 4); -- layer-4: fake:1.0
 
-INSERT INTO layer_feature(id, layer_id, feature_id) VALUES
-  (1, 2, 1),
-  (2, 2, 2),
-  (3, 3, 1),
-  (4, 3, 3),
-  (5, 5, 1),
-  (6, 5, 2),
-  (7, 6, 4),
-  (8, 6, 3);
+INSERT INTO layer_feature(id, layer_id, feature_id, detector_id) VALUES
+  (1, 2, 1, 2), -- layer-1: wechat 0.5
+  (2, 2, 2, 2), -- layer-1: openssl 1.0
+  (3, 3, 1, 2), -- layer-2: wechat 0.5
+  (4, 3, 3, 2), -- layer-2: openssl 2.0
+  (5, 5, 1, 2), -- layer-3b: wechat 0.5
+  (6, 5, 2, 2), -- layer-3b: openssl 1.0
+  (7, 6, 4, 3), -- layer-4: fake 2.0
+  (8, 6, 3, 2); -- layer-4: openssl 2.0
 
-INSERT INTO layer_lister(id, layer_id, lister) VALUES
-  (1, 1, 'dpkg'),
-  (2, 2, 'dpkg'),
-  (3, 3, 'dpkg'),
-  (4, 4, 'dpkg'),
-  (5, 5, 'dpkg'),
-  (6, 6, 'dpkg'),
-  (7, 6, 'rpm');
-
-INSERT INTO layer_detector(id, layer_id, detector) VALUES
-  (1, 1, 'os-release'),
-  (2, 2, 'os-release'),
-  (3, 3, 'os-release'),
-  (4, 4, 'os-release'),
-  (5, 5, 'os-release'),
-  (6, 6, 'os-release'),
-  (7, 6, 'apt-sources');
+INSERT INTO layer_detector(layer_id, detector_id) VALUES
+  (1, 1),
+  (2, 1),
+  (3, 1),
+  (4, 1),
+  (5, 1),
+  (6, 1),
+  (6, 4),
+  (1, 2),
+  (2, 2),
+  (3, 2),
+  (4, 2),
+  (5, 2),
+  (6, 2),
+  (6, 3);
 
 INSERT INTO ancestry (id, name) VALUES
   (1, 'ancestry-1'), -- layer-0, layer-1, layer-2, layer-3a
@@ -59,30 +71,28 @@ INSERT INTO ancestry (id, name) VALUES
   (3, 'ancestry-3'), -- layer-0
   (4, 'ancestry-4'); -- layer-0
 
-INSERT INTO ancestry_lister (id, ancestry_id, lister) VALUES
-  (1, 1, 'dpkg'),
-  (2, 2, 'dpkg');
-
-INSERT INTO ancestry_detector (id, ancestry_id, detector) VALUES
-  (1, 1, 'os-release'),
-  (2, 2, 'os-release');
+INSERT INTO ancestry_detector (ancestry_id, detector_id) VALUES
+  (1, 2),
+  (2, 2),
+  (1, 1),
+  (2, 1);
 
 INSERT INTO ancestry_layer (id, ancestry_id, layer_id, ancestry_index) VALUES
+  -- ancestry-1: layer-0, layer-1, layer-2, layer-3a
   (1, 1, 1, 0),(2, 1, 2, 1),(3, 1, 3, 2),(4, 1, 4, 3),
+  -- ancestry-2: layer-0, layer-1, layer-2, layer-3b
   (5, 2, 1, 0),(6, 2, 2, 1),(7, 2, 3, 2),(8, 2, 5, 3),
-  (9, 3, 1, 0),
-  (10, 4, 1, 0);
-
-INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
-  (1, 1, 1), -- wechat 0.5, debian:7
-  (2, 2, 1), -- openssl 1.0, debian:7
-  (3, 2, 2), -- openssl 1.0, debian:8
-  (4, 3, 1); -- openssl 2.0, debian:7
+  -- ancestry-3: layer-1
+  (9, 3, 2, 0),
+  -- ancestry-4: layer-1
+  (10, 4, 2, 0);
 
 -- assume that ancestry-3 and ancestry-4 are vulnerable.
-INSERT INTO ancestry_feature (id, ancestry_layer_id, namespaced_feature_id) VALUES
-  (1, 1, 1), (2, 1, 4), -- ancestry-1, layer 0 introduces 1, 4
-  (3, 5, 1), (4, 5, 3), -- ancestry-2, layer 0 introduces 1, 3
+INSERT INTO ancestry_feature (id, ancestry_layer_id, namespaced_feature_id, feature_detector_id, namespace_detector_id) VALUES
+  -- ancestry-1: layer-2: wechat 0.5, debian:7; layer-2: openssl 2.0, debian:7
+  (1, 3, 1, 2, ), (2, 3, 4), 
+  -- ancestry-2, layer 0 introduces 1, 3
+  (3, 5, 1), (4, 5, 3),
   (5, 9, 2), -- ancestry-3, layer 0 introduces 2
   (6, 10, 2); -- ancestry-4, layer 0 introduces 2 
 
@@ -103,18 +113,21 @@ INSERT INTO vulnerability_affected_namespaced_feature(id, vulnerability_id, name
 INSERT INTO vulnerability_notification(id, name, created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id) VALUES
  (1, 'test', NULL, NULL, NULL, 2, 1); -- 'CVE-NOPE' -> 'CVE-OPENSSL-1-DEB7'
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('feature', 'id'), (SELECT MAX(id) FROM feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('namespace', 'id'), (SELECT MAX(id) FROM namespace)+1);
+SELECT pg_catalog.setval(pg_get_serial_sequence('namespaced_feature', 'id'), (SELECT MAX(id) FROM namespaced_feature)+1);
+SELECT pg_catalog.setval(pg_get_serial_sequence('detector', 'id'), (SELECT MAX(id) FROM detector)+1);
+
 SELECT pg_catalog.setval(pg_get_serial_sequence('ancestry', 'id'), (SELECT MAX(id) FROM ancestry)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('ancestry_layer', 'id'), (SELECT MAX(id) FROM ancestry_layer)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('ancestry_feature', 'id'), (SELECT MAX(id) FROM ancestry_feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('ancestry_detector', 'id'), (SELECT MAX(id) FROM ancestry_detector)+1);
-SELECT pg_catalog.setval(pg_get_serial_sequence('ancestry_lister', 'id'), (SELECT MAX(id) FROM ancestry_lister)+1);
-SELECT pg_catalog.setval(pg_get_serial_sequence('feature', 'id'), (SELECT MAX(id) FROM feature)+1);
-SELECT pg_catalog.setval(pg_get_serial_sequence('namespaced_feature', 'id'), (SELECT MAX(id) FROM namespaced_feature)+1);
+
 SELECT pg_catalog.setval(pg_get_serial_sequence('layer', 'id'), (SELECT MAX(id) FROM layer)+1);
+SELECT pg_catalog.setval(pg_get_serial_sequence('layer_feature', 'id'), (SELECT MAX(id) FROM layer_feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('layer_namespace', 'id'), (SELECT MAX(id) FROM layer_namespace)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('layer_detector', 'id'), (SELECT MAX(id) FROM layer_detector)+1);
-SELECT pg_catalog.setval(pg_get_serial_sequence('layer_lister', 'id'), (SELECT MAX(id) FROM layer_lister)+1);
+
 SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability', 'id'), (SELECT MAX(id) FROM vulnerability)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability_affected_feature', 'id'), (SELECT MAX(id) FROM vulnerability_affected_feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability_affected_namespaced_feature', 'id'), (SELECT MAX(id) FROM vulnerability_affected_namespaced_feature)+1);

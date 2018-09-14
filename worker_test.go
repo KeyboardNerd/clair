@@ -65,7 +65,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 		layers[k] = database.Layer{
 			LayerMetadata: database.LayerMetadata{
 				Hash: l.Hash,
-				ProcessedBy: database.Processors{
+				ProcessedBy: []database.Detector{
 					Listers:   listers,
 					Detectors: detectors,
 				},
@@ -83,7 +83,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 		for _, layer := range a.Layers {
 			layers = append(layers, database.LayerMetadata{
 				Hash: layer.Hash,
-				ProcessedBy: database.Processors{
+				ProcessedBy: []database.Detector{
 					Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
 					Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
 				},
@@ -92,7 +92,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 			ancestryLayers = append(ancestryLayers, database.AncestryLayer{
 				LayerMetadata: database.LayerMetadata{
 					Hash: layer.Hash,
-					ProcessedBy: database.Processors{
+					ProcessedBy: []database.Detector{
 						Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
 						Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
 					},
@@ -103,7 +103,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 
 		ancestry[k] = database.Ancestry{
 			Name: a.Name,
-			ProcessedBy: database.Processors{
+			ProcessedBy: []database.Detector{
 				Detectors: append([]string(nil), a.ProcessedBy.Detectors...),
 				Listers:   append([]string(nil), a.ProcessedBy.Listers...),
 			},
@@ -216,7 +216,7 @@ func newMockDatastore() *mockDatastore {
 			return nil
 		}
 
-		session.FctPersistLayer = func(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
+		session.FctPersistLayer = func(hash string, namespaces []database.Namespace, features []database.Feature, processedBy []database.Detector) error {
 			if session.terminated {
 				return errSessionDone
 			}
@@ -304,7 +304,7 @@ func newMockDatastore() *mockDatastore {
 }
 
 func TestMain(m *testing.M) {
-	Processors = database.Processors{
+	Detectors = []database.Detector{
 		Listers:   featurefmt.ListListers(),
 		Detectors: featurens.ListDetectors(),
 	}
@@ -404,8 +404,8 @@ func TestProcessLayers(t *testing.T) {
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
-		assert.Equal(t, blank.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, blank.ProcessedBy.Listers, Processors.Listers)
+		assert.Equal(t, blank.ProcessedBy.Detectors, Detectors.Detectors)
+		assert.Equal(t, blank.ProcessedBy.Listers, Detectors.Listers)
 		assert.Len(t, blank.Namespaces, 0)
 		assert.Len(t, blank.Features, 0)
 	} else {
@@ -414,8 +414,8 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if wheezy, ok := datastore.layers["wheezy"]; ok {
-		assert.Equal(t, wheezy.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, wheezy.ProcessedBy.Listers, Processors.Listers)
+		assert.Equal(t, wheezy.ProcessedBy.Detectors, Detectors.Detectors)
+		assert.Equal(t, wheezy.ProcessedBy.Listers, Detectors.Listers)
 		assert.Equal(t, wheezy.Namespaces, []database.Namespace{{Name: "debian:7", VersionFormat: dpkg.ParserName}})
 		assert.Len(t, wheezy.Features, 52)
 	} else {
@@ -424,8 +424,8 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if jessie, ok := datastore.layers["jessie"]; ok {
-		assert.Equal(t, jessie.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, jessie.ProcessedBy.Listers, Processors.Listers)
+		assert.Equal(t, jessie.ProcessedBy.Detectors, Detectors.Detectors)
+		assert.Equal(t, jessie.ProcessedBy.Listers, Detectors.Listers)
 		assert.Equal(t, jessie.Namespaces, []database.Namespace{{Name: "debian:8", VersionFormat: dpkg.ParserName}})
 		assert.Len(t, jessie.Features, 74)
 	} else {
@@ -455,7 +455,7 @@ func TestClairUpgrade(t *testing.T) {
 	}
 
 	// Suppose user scan an ancestry with an old instance of Clair.
-	Processors = database.Processors{
+	Detectors = []database.Detector{
 		Detectors: []string{"os-release"},
 		Listers:   []string{"rpm"},
 	}
@@ -469,7 +469,7 @@ func TestClairUpgrade(t *testing.T) {
 	// Clair is upgraded to use a new namespace detector. The expected
 	// behavior is that all layers will be rescanned with "apt-sources" and
 	// the ancestry's features are recalculated.
-	Processors = database.Processors{
+	Detectors = []database.Detector{
 		Detectors: []string{"os-release", "apt-sources"},
 		Listers:   []string{"rpm"},
 	}
@@ -482,7 +482,7 @@ func TestClairUpgrade(t *testing.T) {
 	// Clair is upgraded to use a new feature lister. The expected behavior is
 	// that all layers will be rescanned with "dpkg" and the ancestry's features
 	// are invalidated and recalculated.
-	Processors = database.Processors{
+	Detectors = []database.Detector{
 		Detectors: []string{"os-release", "apt-sources"},
 		Listers:   []string{"rpm", "dpkg"},
 	}
@@ -623,7 +623,7 @@ func TestComputeAncestryFeatures(t *testing.T) {
 		}: false,
 	}
 
-	ancestryLayers, err := computeAncestryLayers(layers, database.Processors{})
+	ancestryLayers, err := computeAncestryLayers(layers, []database.Detector{})
 	assert.Nil(t, err)
 	features := getNamespacedFeatures(ancestryLayers)
 	for _, f := range features {

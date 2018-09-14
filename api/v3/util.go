@@ -13,8 +13,8 @@ import (
 // protobuf struct.
 func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 	status := &pb.ClairStatus{
-		Listers:   clair.Processors.Listers,
-		Detectors: clair.Processors.Detectors,
+		Listers:   clair.Detectors.Listers,
+		Detectors: clair.Detectors.Detectors,
 	}
 
 	t, firstUpdate, err := clair.GetLastUpdateTime(store)

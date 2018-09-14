@@ -79,7 +79,7 @@ func TestUpsertAncestry(t *testing.T) {
 		VersionFormat: "dpkg",
 	}
 
-	p := database.Processors{
+	p := []database.Detector{
 		Listers:   []string{"dpkg", "non-existing"},
 		Detectors: []string{"os-release", "non-existing"},
 	}
@@ -114,7 +114,7 @@ func TestUpsertAncestry(t *testing.T) {
 	assertAncestryEqual(t, a4, ancestry)
 }
 
-func assertProcessorsEqual(t *testing.T, expected database.Processors, actual database.Processors) bool {
+func assertDetectorsEqual(t *testing.T, expected []database.Detector, actual []database.Detector) bool {
 	sort.Strings(expected.Detectors)
 	sort.Strings(actual.Detectors)
 	sort.Strings(expected.Listers)
@@ -124,7 +124,7 @@ func assertProcessorsEqual(t *testing.T, expected database.Processors, actual da
 
 func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual database.Ancestry) bool {
 	assert.Equal(t, expected.Name, actual.Name)
-	assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
+	assertDetectorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
 	if assert.Equal(t, len(expected.Layers), len(actual.Layers)) {
 		for index, layer := range expected.Layers {
 			if !assertAncestryLayerEqual(t, layer, actual.Layers[index]) {
@@ -153,7 +153,7 @@ func TestFindAncestry(t *testing.T) {
 
 	expected := database.Ancestry{
 		Name: "ancestry-2",
-		ProcessedBy: database.Processors{
+		ProcessedBy: []database.Detector{
 			Detectors: []string{"os-release"},
 			Listers:   []string{"dpkg"},
 		},

@@ -121,7 +121,7 @@ func configClairVersion(config *Config) {
 	}
 
 	// All listers and detectors are enabled.
-	clair.Processors = database.Processors{Detectors: detectors, Listers: listers}
+	clair.Detectors = []database.Detector{Detectors: detectors, Listers: listers}
 	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
 }
 

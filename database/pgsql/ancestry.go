@@ -43,7 +43,7 @@ func (tx *pgSession) UpsertAncestry(ancestry database.Ancestry) error {
 		return err
 	}
 
-	return tx.persistProcessors(persistAncestryLister,
+	return tx.persistDetectors(persistAncestryLister,
 		"persistAncestryLister",
 		persistAncestryDetector,
 		"persistAncestryDetector",
@@ -63,17 +63,17 @@ func (tx *pgSession) findAncestryID(name string) (int64, bool, error) {
 	return id.Int64, true, nil
 }
 
-func (tx *pgSession) findAncestryProcessors(id int64) (database.Processors, error) {
+func (tx *pgSession) findAncestryDetectors(id int64) ([]database.Detector, error) {
 	var (
-		processors database.Processors
+		processors []database.Detector
 		err        error
 	)
 
-	if processors.Detectors, err = tx.findProcessors(searchAncestryDetectors, id); err != nil {
+	if processors.Detectors, err = tx.findDetectors(searchAncestryDetectors, id); err != nil {
 		return processors, handleError("searchAncestryDetectors", err)
 	}
 
-	if processors.Listers, err = tx.findProcessors(searchAncestryListers, id); err != nil {
+	if processors.Listers, err = tx.findDetectors(searchAncestryListers, id); err != nil {
 		return processors, handleError("searchAncestryListers", err)
 	}
 
@@ -91,7 +91,7 @@ func (tx *pgSession) FindAncestry(name string) (database.Ancestry, bool, error) 
 		return ancestry, ok, err
 	}
 
-	if ancestry.ProcessedBy, err = tx.findAncestryProcessors(id); err != nil {
+	if ancestry.ProcessedBy, err = tx.findAncestryDetectors(id); err != nil {
 		return ancestry, false, err
 	}
 
@@ -114,32 +114,6 @@ func (tx *pgSession) deleteAncestry(name string) error {
 	}
 
 	return nil
-}
-
-func (tx *pgSession) findProcessors(query string, id int64) ([]string, error) {
-	var (
-		processors []string
-		processor  string
-	)
-
-	rows, err := tx.Query(query, id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-
-		return nil, err
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(&processor); err != nil {
-			return nil, err
-		}
-
-		processors = append(processors, processor)
-	}
-
-	return processors, nil
 }
 
 func (tx *pgSession) findAncestryLayers(id int64) ([]database.AncestryLayer, error) {
@@ -182,7 +156,7 @@ func (tx *pgSession) findAncestryLayers(id int64) ([]database.AncestryLayer, err
 	}
 
 	for _, layer := range layers {
-		if layer.ProcessedBy, err = tx.findLayerProcessors(layer.layerID); err != nil {
+		if layer.ProcessedBy, err = tx.findLayerDetectors(layer.layerID); err != nil {
 			return nil, err
 		}
 	}

@@ -33,7 +33,6 @@ const (
 			DO UPDATE SET key=$1, value=$2`
 
 	// namespace.go
-
 	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
 
 	// feature.go
@@ -96,9 +95,7 @@ const (
 		WHERE layer_namespace.layer_id = $1 
 			AND layer_namespace.namespace_id = namespace.id`
 
-	searchLayer          = `SELECT id FROM layer WHERE hash = $1`
-	searchLayerDetectors = `SELECT detector FROM layer_detector WHERE layer_id = $1`
-	searchLayerListers   = `SELECT lister FROM layer_lister WHERE layer_id = $1`
+	searchLayer = `SELECT id FROM layer WHERE hash = $1`
 
 	// lock.go
 	soiLock = `INSERT INTO lock(name, owner, until) VALUES ($1, $2, $3)`
@@ -214,15 +211,6 @@ const (
 		LIMIT $3;`
 
 	// ancestry.go
-	persistAncestryLister = `
-		INSERT INTO ancestry_lister (ancestry_id, lister)
-		SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
-		WHERE NOT EXISTS (SELECT id FROM ancestry_lister WHERE ancestry_id = $1 AND lister = $2) ON CONFLICT DO NOTHING`
-
-	persistAncestryDetector = `
-		INSERT INTO ancestry_detector (ancestry_id, detector)
-			SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
-			WHERE NOT EXISTS (SELECT id FROM ancestry_detector WHERE ancestry_id = $1 AND detector = $2) ON CONFLICT DO NOTHING`
 
 	insertAncestry = `INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
 
@@ -243,8 +231,6 @@ const (
 			AND namespaced_feature.namespace_id = namespace.id`
 
 	searchAncestry             = `SELECT id FROM ancestry WHERE name = $1`
-	searchAncestryDetectors    = `SELECT detector FROM ancestry_detector WHERE ancestry_id = $1`
-	searchAncestryListers      = `SELECT lister FROM ancestry_lister WHERE ancestry_id = $1`
 	removeAncestry             = `DELETE FROM ancestry WHERE name = $1`
 	insertAncestryLayer        = `INSERT INTO ancestry_layer(ancestry_id, ancestry_index, layer_id) VALUES($1,$2, (SELECT layer.id FROM layer WHERE hash = $3 LIMIT 1)) RETURNING id`
 	insertAncestryLayerFeature = `INSERT INTO ancestry_feature(ancestry_layer_id, namespaced_feature_id) VALUES ($1, $2)`

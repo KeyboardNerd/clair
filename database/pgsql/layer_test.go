@@ -27,7 +27,7 @@ func TestPersistLayer(t *testing.T) {
 	defer closeTest(t, datastore, tx)
 
 	// invalid
-	assert.NotNil(t, tx.PersistLayer("", nil, nil, database.Processors{}))
+	assert.NotNil(t, tx.PersistLayer("", nil, nil, []database.Detector{}))
 	// insert namespaces + features to
 	namespaces := []database.Namespace{
 		{
@@ -44,7 +44,7 @@ func TestPersistLayer(t *testing.T) {
 		},
 	}
 
-	processors := database.Processors{
+	processors := []database.Detector{
 		Listers:   []string{"release"},
 		Detectors: []string{"apk"},
 	}
@@ -93,7 +93,7 @@ func TestFindLayer(t *testing.T) {
 	expectedL := database.Layer{
 		LayerMetadata: database.LayerMetadata{
 			Hash: "layer-4",
-			ProcessedBy: database.Processors{
+			ProcessedBy: []database.Detector{
 				Detectors: []string{"os-release", "apt-sources"},
 				Listers:   []string{"dpkg", "rpm"},
 			},
@@ -121,6 +121,6 @@ func assertLayerWithContentEqual(t *testing.T, expected database.Layer, actual d
 }
 
 func assertLayerEqual(t *testing.T, expected database.LayerMetadata, actual database.LayerMetadata) bool {
-	return assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy) &&
+	return assertDetectorsEqual(t, expected.ProcessedBy, actual.ProcessedBy) &&
 		assert.Equal(t, expected.Hash, actual.Hash)
 }

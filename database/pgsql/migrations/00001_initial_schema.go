@@ -53,7 +53,7 @@ var (
 	detector = dbutil.MigrationQuery{
 		Up: []string{
 			// Detector Type
-			`CREATE TYPE detector_type AS ENUM ('namespace', 'feature')`,
+			`CREATE TYPE detector_type AS ENUM ('namespace', 'feature');`,
 
 			// Detector
 			`CREATE TABLE IF NOT EXISTS detector (

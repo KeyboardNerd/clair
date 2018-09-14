@@ -44,12 +44,12 @@ var (
 
 	urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
 
-	// Processors contain the names of namespace detectors and feature listers
+	// Detectors contain the names of namespace detectors and feature listers
 	// enabled in this instance of Clair.
 	//
-	// Processors are initialized during booting and configured in the
+	// Detectors are initialized during booting and configured in the
 	// configuration file.
-	Processors []database.Detector
+	Detectors []database.Detector
 )
 
 // LayerRequest represents all information necessary to download and process a
@@ -63,7 +63,7 @@ type LayerRequest struct {
 // partialLayer stores layer's content detected by `processedBy` processors.
 type partialLayer struct {
 	hash        string
-	processedBy database.Processors
+	processedBy []database.Detector
 	namespaces  []database.Namespace
 	features    []database.Feature
 
@@ -75,7 +75,7 @@ type processRequest struct {
 	request LayerRequest
 	// notProcessedBy represents a set of processors used to process the
 	// request.
-	notProcessedBy database.Processors
+	notProcessedBy []database.Detector
 }
 
 // cleanURL removes all parameters from an URL.
@@ -166,7 +166,7 @@ func getLayer(datastore database.Datastore, req LayerRequest) (layer database.La
 
 		preq = &processRequest{
 			request:        req,
-			notProcessedBy: Processors,
+			notProcessedBy: Detectors,
 		}
 	} else {
 		notProcessed := getNotProcessedBy(layer.ProcessedBy)
@@ -346,10 +346,10 @@ func isAncestryProcessed(datastore database.Datastore, name string) (bool, error
 // enabled processors in this instance of Clair.
 func ProcessAncestry(datastore database.Datastore, imageFormat, name string, layerRequest []LayerRequest) error {
 	var (
-		err              error
-		ok               bool
-		layers           []database.Layer
-		commonProcessors database.Processors
+		err             error
+		ok              bool
+		layers          []database.Layer
+		commonDetectors []database.Detector
 	)
 
 	if name == "" {
@@ -371,11 +371,11 @@ func ProcessAncestry(datastore database.Datastore, imageFormat, name string, lay
 		return err
 	}
 
-	if commonProcessors, err = getProcessors(layers); err != nil {
+	if commonDetectors, err = getDetectors(layers); err != nil {
 		return err
 	}
 
-	return processAncestry(datastore, name, layers, commonProcessors)
+	return processAncestry(datastore, name, layers, commonDetectors)
 }
 
 // getNamespacedFeatures extracts the namespaced features introduced in each
@@ -388,15 +388,15 @@ func getNamespacedFeatures(layers []database.AncestryLayer) []database.Namespace
 	return features
 }
 
-func processAncestry(datastore database.Datastore, name string, layers []database.Layer, commonProcessors database.Processors) error {
+func processAncestry(datastore database.Datastore, name string, layers []database.Layer, commonDetectors []database.Detector) error {
 	var (
 		ancestry database.Ancestry
 		err      error
 	)
 
 	ancestry.Name = name
-	ancestry.ProcessedBy = commonProcessors
-	ancestry.Layers, err = computeAncestryLayers(layers, commonProcessors)
+	ancestry.ProcessedBy = commonDetectors
+	ancestry.Layers, err = computeAncestryLayers(layers, commonDetectors)
 	if err != nil {
 		return err
 	}
@@ -405,7 +405,7 @@ func processAncestry(datastore database.Datastore, name string, layers []databas
 	log.WithFields(log.Fields{
 		"ancestry":           name,
 		"number of features": len(ancestryFeatures),
-		"processed by":       Processors,
+		"processed by":       Detectors,
 		"number of layers":   len(ancestry.Layers),
 	}).Debug("compute ancestry features")
 
@@ -459,10 +459,10 @@ func persistNamespacedFeatures(datastore database.Datastore, features []database
 	return tx.Commit()
 }
 
-// getProcessors retrieves common subset of the processors of each layer.
-func getProcessors(layers []database.Layer) (database.Processors, error) {
+// getDetectors retrieves common subset of the processors of each layer.
+func getDetectors(layers []database.Layer) ([]database.Detector, error) {
 	if len(layers) == 0 {
-		return database.Processors{}, nil
+		return []database.Detector{}, nil
 	}
 
 	detectors := layers[0].ProcessedBy.Detectors
@@ -481,10 +481,10 @@ func getProcessors(layers []database.Layer) (database.Processors, error) {
 			// TODO(sidchen): Once the features can be associated with
 			// Detectors/Listers, we can support dynamically generating ancestry's
 			// detector/lister based on the layers.
-			return database.Processors{}, errors.New("processing layers with different Clair instances is currently unsupported")
+			return []database.Detector{}, errors.New("processing layers with different Clair instances is currently unsupported")
 		}
 	}
-	return database.Processors{
+	return []database.Detector{
 		Detectors: detectors,
 		Listers:   listers,
 	}, nil
@@ -497,9 +497,9 @@ type introducedFeature struct {
 
 // computeAncestryLayers computes ancestry's layers along with what features are
 // introduced.
-func computeAncestryLayers(layers []database.Layer, commonProcessors database.Processors) ([]database.AncestryLayer, error) {
+func computeAncestryLayers(layers []database.Layer, commonDetectors []database.Detector) ([]database.AncestryLayer, error) {
 	// TODO(sidchen): Once the features are linked to specific processor, we
-	// will use commonProcessors to filter out the features for this ancestry.
+	// will use commonDetectors to filter out the features for this ancestry.
 
 	// version format -> namespace
 	namespaces := map[string]database.Namespace{}
@@ -576,17 +576,17 @@ func computeAncestryLayers(layers []database.Layer, commonProcessors database.Pr
 
 // getNotProcessedBy returns a processors, which contains the detectors and
 // listers not in `processedBy` but implemented in the current clair instance.
-func getNotProcessedBy(processedBy database.Processors) database.Processors {
-	notProcessedLister := strutil.CompareStringLists(Processors.Listers, processedBy.Listers)
-	notProcessedDetector := strutil.CompareStringLists(Processors.Detectors, processedBy.Detectors)
-	return database.Processors{
+func getNotProcessedBy(processedBy []database.Detector) []database.Detector {
+	notProcessedLister := strutil.CompareStringLists(Detectors.Listers, processedBy.Listers)
+	notProcessedDetector := strutil.CompareStringLists(Detectors.Detectors, processedBy.Detectors)
+	return []database.Detector{
 		Listers:   notProcessedLister,
 		Detectors: notProcessedDetector,
 	}
 }
 
 // detectContent downloads a layer and detects all features and namespaces.
-func detectContent(imageFormat, name, path string, headers map[string]string, toProcess database.Processors) (namespaces []database.Namespace, featureVersions []database.Feature, err error) {
+func detectContent(imageFormat, name, path string, headers map[string]string, toProcess []database.Detector) (namespaces []database.Namespace, featureVersions []database.Feature, err error) {
 	log.WithFields(log.Fields{"Hash": name}).Debug("Process Layer")
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(toProcess.Listers), featurens.RequiredFilenames(toProcess.Detectors)...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)

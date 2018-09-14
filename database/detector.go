@@ -25,6 +25,10 @@ import (
 // not be parsed from a string.
 var ErrFailedToParseDetectorType = errors.New("failed to parse DetectorType from input")
 
+// ErrInvalidDetector is the error returned when a detector from database has
+// invalid name or version or type.
+var ErrInvalidDetector = errors.New("the detector has invalid metadata")
+
 // DetectorType is the type of a detector.
 type DetectorType string
 
