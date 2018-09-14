@@ -49,7 +49,7 @@ var (
 	//
 	// Processors are initialized during booting and configured in the
 	// configuration file.
-	Processors database.Processors
+	Processors []database.Detector
 )
 
 // LayerRequest represents all information necessary to download and process a

@@ -22,12 +22,28 @@ var DetectorTypes = []DetectorType{
 
 // Detector is an extention to scan a layer's content.
 type Detector struct {
-	// Name of the detector
+	// Name of a detector should be non-empty and uniquely identifies the
+	// detector.
 	Name string
-	// Version of the detector
+	// Version of a detector should be non-empty.
 	Version string
-	// Type of the detector
+	// Type of a detector should be one of the types in DetectorTypes.
 	Type DetectorType
+}
+
+// Valid checks if all fields in the detector satisfies the spec.
+func (d Detector) Valid() bool {
+	if d.Name == "" && d.Version == "" {
+		return false
+	}
+
+	for _, t := range DetectorTypes {
+		if d.Type == t {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (d Detector) String() string {

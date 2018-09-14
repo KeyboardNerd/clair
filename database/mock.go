@@ -32,7 +32,7 @@ type MockSession struct {
 	FctPersistFeatures                  func([]Feature) error
 	FctPersistNamespacedFeatures        func([]NamespacedFeature) error
 	FctCacheAffectedNamespacedFeatures  func([]NamespacedFeature) error
-	FctPersistLayer                     func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	FctPersistLayer                     func(hash string, namespaces []Namespace, features []Feature, processedBy []Detector) error
 	FctFindLayer                        func(name string) (Layer, bool, error)
 	FctInsertVulnerabilities            func([]VulnerabilityWithAffected) error
 	FctFindVulnerabilities              func([]VulnerabilityID) ([]NullableVulnerability, error)
@@ -113,7 +113,7 @@ func (ms *MockSession) CacheAffectedNamespacedFeatures(namespacedFeatures []Name
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error {
+func (ms *MockSession) PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy []Detector) error {
 	if ms.FctPersistLayer != nil {
 		return ms.FctPersistLayer(hash, namespaces, features, processedBy)
 	}
