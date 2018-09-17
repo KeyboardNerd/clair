@@ -17,10 +17,10 @@ package pgsql
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -36,6 +36,35 @@ import (
 var (
 	withFixtureName, withoutFixtureName string
 )
+
+// testInsertQuery creates a insertion query for testing purpose only
+func testInsertQuery(table string, fields ...string) string {
+	toInsert := []string{}
+	for i := range fields {
+		toInsert = append(toInsert, "$"+strconv.Itoa(i+1))
+	}
+
+	return fmt.Sprintf("INSERT INTO %s("+strings.Join(fields, ",")+") VALUES (%s) RETURNING id", table, strings.Join(toInsert, ","))
+}
+
+func initTestDatabase(db *sql.DB) {
+	// simple queries
+	var (
+		insertNamespace         = testInsertQuery("namespace", "name", "version_format")
+		insertFeature           = testInsertQuery("feature", "name", "version", "version_format")
+		insertLayer             = testInsertQuery("layer", "hash")
+		insertLayerNamespace    = testInsertQuery("layer_namespace", "layer_id", "namespace_id")
+		insertLayerFeature      = testInsertQuery("layer_feature", "layer_id", "feature_id")
+		insertLayerLister       = testInsertQuery("layer_lister", "layer_id", "lister")
+		insertLayerDetector     = testInsertQuery("layer_detector", "layer_id", "detector")
+		insertAncestry          = testInsertQuery("ancestry", "name")
+		insertAncestryLister    = testInsertQuery("ancestry_lister", "ancestry_id", "lister")
+		insertAncestryDetector  = testInsertQuery("ancestry_detector", "ancestry_id", "detector")
+		insertAncestryLayer     = testInsertQuery("ancestry_layer", "ancestry_id", "layer_id", "ancestry_index")
+		insertNamespacedFeature = testInsertQuery("namespace_feature", "feature_id", "namespace_id")
+	)
+
+}
 
 func genTemplateDatabase(name string, loadFixture bool) (sourceURL string, dbName string) {
 	config := generateTestConfig(name, loadFixture, false)
@@ -69,16 +98,7 @@ func genTemplateDatabase(name string, loadFixture bool) (sourceURL string, dbNam
 
 	if loadFixture {
 		log.Info("pgsql: loading fixtures")
-
-		d, err := ioutil.ReadFile(fixturePath)
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = db.Exec(string(d))
-		if err != nil {
-			panic(err)
-		}
+		initTestDatabase(db)
 	}
 
 	db.Exec("UPDATE pg_database SET datistemplate=True WHERE datname=$1", name)
