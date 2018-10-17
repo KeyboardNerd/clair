@@ -110,9 +110,11 @@ func queryInsertNotifications(count int) string {
 func queryPersistFeature(count int) string {
 	return queryPersist(count,
 		"feature",
-		"feature_name_version_version_format_key",
+		"feature_name_version_source_name_source_version_version_for_key",
 		"name",
 		"version",
+		"source_name",
+		"source_version",
 		"version_format")
 }
 

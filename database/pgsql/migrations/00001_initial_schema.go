@@ -32,9 +32,12 @@ var (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
 				version TEXT NOT NULL,
+				source_name TEXT NOT NULL,
+				source_version TEXT NOT NULL,
 				version_format TEXT NOT NULL,
-				UNIQUE (name, version, version_format));`,
+				UNIQUE (name, version, source_name, source_version, version_format));`,
 			`CREATE INDEX ON feature(name);`,
+			`CREATE INDEX ON feature(source_name);`,
 
 			`CREATE TABLE IF NOT EXISTS namespaced_feature (
 				id SERIAL PRIMARY KEY,

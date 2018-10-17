@@ -447,7 +447,7 @@ func detectContent(imageFormat string, req *processRequest) (res *processResult)
 
 	log.WithFields(log.Fields{
 		"layer":           req.Hash,
-		"detectors":       req.detectors,
+		"detectors":       database.SerializeDetectors(layer.By),
 		"namespace count": len(layer.Namespaces),
 		"feature count":   len(layer.Features),
 	}).Info("processed layer")

@@ -76,11 +76,13 @@ func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 	})
 
 	// TODO(Sida): A better interface for bulk insertion is needed.
-	keys := make([]interface{}, len(features)*3)
+	keys := make([]interface{}, len(features)*5)
 	for i, f := range features {
-		keys[i*3] = f.Name
-		keys[i*3+1] = f.Version
-		keys[i*3+2] = f.VersionFormat
+		keys[i*5] = f.Name
+		keys[i*5+1] = f.Version
+		keys[i*5+2] = f.SourceName
+		keys[i*5+3] = f.SourceVersion
+		keys[i*5+4] = f.VersionFormat
 		if f.Name == "" || f.Version == "" || f.VersionFormat == "" {
 			return commonerr.NewBadRequestError("Empty feature name, version or version format is not allowed")
 		}

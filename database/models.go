@@ -195,11 +195,12 @@ type VulnerabilityWithFixedIn struct {
 	FixedInVersion string
 }
 
-// AffectedFeature is used to determine whether a namespaced feature is affected
-// by a Vulnerability. Namespace and Feature Name is unique. Affected Feature is
-// bound to vulnerability.
+// AffectedFeature is a hint to determine if a feature is affected or not based
+// on the information included.
 type AffectedFeature struct {
-	Namespace   Namespace
+	// AffectedFeatureType determines which type of package it affects.
+	AffectedFeatureType FeatureType
+	// Name of the feature it should match.
 	FeatureName string
 	// FixedInVersion is known next feature version that's not affected by the
 	// vulnerability. Empty FixedInVersion means the unaffected version is
