@@ -103,7 +103,8 @@ type AncestryFeature struct {
 	NamespaceBy Detector
 }
 
-// Layer is a layer with all the detected features and namespaces.
+// Layer contains all extracted content from a layer blob identified by the
+// Hash.
 type Layer struct {
 	// Hash is the sha-256 tarsum on the layer's blob content.
 	Hash string
@@ -144,7 +145,14 @@ type LayerFeature struct {
 	Feature
 
 	// By is the detector found the feature.
-	By Detector
+	By      Detector
+	Related []RelatedFeature
+}
+
+// RelatedFeature stores the relationship between two features
+type RelatedFeature struct {
+	feature  *LayerFeature
+	relation FeatureRelationType
 }
 
 // Namespace is the contextual information around features.
@@ -155,18 +163,16 @@ type Namespace struct {
 	VersionFormat string
 }
 
-// Feature represents a package detected in a layer but the namespace is not
-// determined.
+// Feature represents a vulnerability trait that can be used to determine if a
+// vulnerability affects this or not.
 //
-// e.g. Name: Libssl1.0, Version: 1.0, Name: Openssl, Version: 1.0, VersionFormat: dpkg.
-// dpkg is the version format of the installer package manager, which in this
-// case could be dpkg or apk.
+// e.g.
+// Name: libssl, Version: 1.0, VersionFormat: dpkg, Type: BinaryPackage
 type Feature struct {
 	Name          string
 	Version       string
-	SourceName    string
-	SourceVersion string
 	VersionFormat string
+	Type          FeatureType
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected
