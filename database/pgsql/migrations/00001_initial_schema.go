@@ -19,7 +19,6 @@ var (
 	// the ancestry.
 	entities = MigrationQuery{
 		Up: []string{
-			// namespaces
 			`CREATE TABLE IF NOT EXISTS namespace (
 				id SERIAL PRIMARY KEY,
 				name TEXT NULL,
@@ -27,12 +26,12 @@ var (
 				UNIQUE (name, version_format));`,
 			`CREATE INDEX ON namespace(name);`,
 
-			// features
 			`CREATE TABLE IF NOT EXISTS feature (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
 				version TEXT NOT NULL,
 				version_format TEXT NOT NULL,
+				type TEXT NOT NULL,
 				UNIQUE (name, version, version_format));`,
 			`CREATE INDEX ON feature(name);`,
 
@@ -50,10 +49,8 @@ var (
 	// detector is analysis extensions used by the worker.
 	detector = MigrationQuery{
 		Up: []string{
-			// Detector Type
 			`CREATE TYPE detector_type AS ENUM ('namespace', 'feature');`,
 
-			// Detector
 			`CREATE TABLE IF NOT EXISTS detector (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
@@ -70,7 +67,6 @@ var (
 	// layer contains all metadata and scanned features and namespaces.
 	layer = MigrationQuery{
 		Up: []string{
-			// layers
 			`CREATE TABLE IF NOT EXISTS layer(
 				id SERIAL PRIMARY KEY,
 				hash TEXT NOT NULL UNIQUE);`,
@@ -154,7 +150,6 @@ var (
 		Up: []string{
 			`CREATE TYPE severity AS ENUM ('Unknown', 'Negligible', 'Low', 'Medium', 'High', 'Critical', 'Defcon1');`,
 
-			// vulnerability
 			`CREATE TABLE IF NOT EXISTS vulnerability (
 				id SERIAL PRIMARY KEY,
 				namespace_id INT REFERENCES Namespace,
@@ -172,6 +167,7 @@ var (
 				id SERIAL PRIMARY KEY, 
 				vulnerability_id INT REFERENCES vulnerability ON DELETE CASCADE,
 				feature_name TEXT NOT NULL,
+				feature_type TEXT NOT NULL,
 				affected_version TEXT,
 				fixedin TEXT);`,
 			`CREATE INDEX ON vulnerability_affected_feature(vulnerability_id, feature_name);`,
