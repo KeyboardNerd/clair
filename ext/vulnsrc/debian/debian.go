@@ -38,7 +38,7 @@ const (
 	url          = "https://security-tracker.debian.org/tracker/data/json"
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
-	affectedType = database.AffectSourcePackage
+	affectedType = database.SourcePackage
 )
 
 type jsonData map[string]map[string]jsonVuln

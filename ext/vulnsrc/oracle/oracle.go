@@ -41,7 +41,7 @@ const (
 	ovalURI          = "https://linux.oracle.com/oval/"
 	elsaFilePrefix   = "com.oracle.elsa-"
 	updaterFlag      = "oracleUpdater"
-	affectedType     = database.AffectBinaryPackage
+	affectedType     = database.BinaryPackage
 )
 
 var (

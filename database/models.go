@@ -200,7 +200,7 @@ type VulnerabilityWithFixedIn struct {
 // bound to vulnerability.
 type AffectedFeature struct {
 	// AffectedType determines which type of package it affects.
-	AffectedType AffectedFeatureType
+	AffectedType FeatureType
 	Namespace    Namespace
 	FeatureName  string
 	// FixedInVersion is known next feature version that's not affected by the

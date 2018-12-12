@@ -43,7 +43,7 @@ const (
 	ovalURI        = "https://www.redhat.com/security/data/oval/"
 	rhsaFilePrefix = "com.redhat.rhsa-"
 	updaterFlag    = "rhelUpdater"
-	affectedType   = database.AffectBinaryPackage
+	affectedType   = database.BinaryPackage
 )
 
 var (

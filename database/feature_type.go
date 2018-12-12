@@ -14,13 +14,13 @@
 
 package database
 
-// AffectedFeatureType indicates the type of feature that a vulnerability
+// FeatureType indicates the type of feature that a vulnerability
 // affects.
-type AffectedFeatureType string
+type FeatureType string
 
 const (
-	// AffectSourcePackage indicates the vulnerability affects a source package.
-	AffectSourcePackage AffectedFeatureType = "source"
-	// AffectBinaryPackage indicates the vulnerability affects a binary package.
-	AffectBinaryPackage AffectedFeatureType = "binary"
+	// SourcePackage indicates the vulnerability affects a source package.
+	SourcePackage FeatureType = "source"
+	// BinaryPackage indicates the vulnerability affects a binary package.
+	BinaryPackage FeatureType = "binary"
 )

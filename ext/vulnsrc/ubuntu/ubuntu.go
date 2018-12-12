@@ -39,7 +39,7 @@ const (
 	trackerURI   = "https://git.launchpad.net/ubuntu-cve-tracker"
 	updaterFlag  = "ubuntuUpdater"
 	cveURL       = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
-	affectedType = database.AffectSourcePackage
+	affectedType = database.SourcePackage
 )
 
 var (
