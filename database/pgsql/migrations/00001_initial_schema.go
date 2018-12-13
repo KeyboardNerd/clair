@@ -112,7 +112,6 @@ var (
 	// layers.
 	ancestry = MigrationQuery{
 		Up: []string{
-			// ancestry
 			`CREATE TABLE IF NOT EXISTS ancestry (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL UNIQUE);`,
