@@ -33,7 +33,7 @@ var (
 // Lister represents an ability to list the features present in an image layer.
 type Lister interface {
 	// ListFeatures produces a list of Features present in an image layer.
-	ListFeatures(tarutil.FilesMap) ([]database.Feature, error)
+	ListFeatures(tarutil.FilesMap) (*PackageSet, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the ListFeatures method.
@@ -72,11 +72,11 @@ func RegisterLister(name string, version string, l Lister) {
 
 // ListFeatures produces the list of Features in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) ([]database.LayerFeature, error) {
+func ListFeatures(layerBlob tarutil.FilesMap, toUse []database.Detector) (*PackageSet, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	features := []database.LayerFeature{}
+	set := NewPackageSet()
 	for _, d := range toUse {
 		// Only use the detector with the same type
 		if d.DType != database.FeatureDetectorType {
@@ -84,24 +84,18 @@ func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) ([]database
 		}
 
 		if lister, ok := listers[d.Name]; ok {
-			fs, err := lister.ListFeatures(files)
+			subset, err := lister.ListFeatures(layerBlob)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, f := range fs {
-				features = append(features, database.LayerFeature{
-					Feature: f,
-					By:      lister.info,
-				})
-			}
-
+			set.Merge(subset)
 		} else {
 			log.WithField("Name", d).Fatal("unknown feature detector")
 		}
 	}
 
-	return features, nil
+	return set, nil
 }
 
 // RequiredFilenames returns all files required by the give extensions. Any

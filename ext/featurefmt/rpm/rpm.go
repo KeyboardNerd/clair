@@ -23,10 +23,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
@@ -55,16 +53,16 @@ func isIgnored(packageName string) bool {
 	return false
 }
 
-func valid(pkg *database.Feature) bool {
+func valid(pkg *featurefmt.Package) bool {
 	return pkg.Name != "" && pkg.Version != "" &&
 		((pkg.SourceName == "" && pkg.SourceVersion != "") ||
 			(pkg.SourceName != "" && pkg.SourceVersion != ""))
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) (*featurefmt.PackageSet, error) {
 	f, hasFile := files["var/lib/rpm/Packages"]
 	if !hasFile {
-		return []database.Feature{}, nil
+		return nil, nil
 	}
 
 	// Write the required "Packages" file to disk
@@ -72,13 +70,13 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary folder for RPM detection")
-		return []database.Feature{}, commonerr.ErrFilesystem
+		return nil, commonerr.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary file for RPM detection")
-		return []database.Feature{}, commonerr.ErrFilesystem
+		return nil, commonerr.ErrFilesystem
 	}
 
 	// Extract binary package names because RHSA refers to binary package names.
@@ -87,10 +85,9 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		log.WithError(err).WithField("output", string(out)).Error("could not query RPM")
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
-		return []database.Feature{}, nil
+		return nil, nil
 	}
 
-	packages := mapset.NewSet()
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), " ")
@@ -104,7 +101,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 			continue
 		}
 
-		pkg := database.Feature{Name: line[0], VersionFormat: rpm.ParserName}
+		pkg := featurefmt.Package{Name: line[0]}
 		pkg.Version = strings.Replace(line[1], "(none):", "", -1)
 		if err := versionfmt.Valid(rpm.ParserName, pkg.Version); err != nil {
 			log.WithError(err).WithField("version", line[1]).Warning("skipped unparseable package")
@@ -121,7 +118,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	return packages, nil
 }
 
 func (l lister) RequiredFilenames() []string {
@@ -140,7 +137,7 @@ const (
 
 // parseSourceRPM parses the source rpm package representation string
 // http://ftp.rpm.org/max-rpm/ch-rpm-file-format.html
-func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
+func parseSourceRPM(sourceRPM string, pkg *featurefmt.Package) error {
 	state := parseRPM
 	previousCheckPoint := len(sourceRPM)
 	release := ""

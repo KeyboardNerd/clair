@@ -147,6 +147,14 @@ type LayerFeature struct {
 	By Detector
 }
 
+// NewLayerFeature creates a new layer feature
+func NewLayerFeature(name, version, sourceName, sourceVersion, versionFormat string, detector *Detector) *LayerFeature {
+	return &LayerFeature{
+		Feature: Feature{name, version, sourceName, sourceVersion, versionFormat},
+		By:      *detector,
+	}
+}
+
 // Namespace is the contextual information around features.
 //
 // e.g. Debian:7, NodeJS.
