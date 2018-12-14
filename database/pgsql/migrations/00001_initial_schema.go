@@ -119,9 +119,9 @@ var (
 			`CREATE TABLE IF NOT EXISTS ancestry_layer (
 				id SERIAL PRIMARY KEY,
 				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
-				ancestry_index INT NOT NULL,
+				layer_index INT NOT NULL,
 				layer_id INT NOT NULL REFERENCES layer ON DELETE RESTRICT,
-				UNIQUE (ancestry_id, ancestry_index));`,
+				UNIQUE (ancestry_id, layer_index));`,
 			`CREATE INDEX ON ancestry_layer(ancestry_id);`,
 
 			`CREATE TABLE IF NOT EXISTS ancestry_feature(

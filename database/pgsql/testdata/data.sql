@@ -77,7 +77,7 @@ INSERT INTO ancestry_detector (ancestry_id, detector_id) VALUES
   (1, 1),
   (2, 1);
 
-INSERT INTO ancestry_layer (id, ancestry_id, layer_id, ancestry_index) VALUES
+INSERT INTO ancestry_layer (id, ancestry_id, layer_id, layer_index) VALUES
   -- ancestry-1: layer-0, layer-1, layer-2, layer-3a
   (1, 1, 1, 0),(2, 1, 2, 1),(3, 1, 3, 2),(4, 1, 4, 3),
   -- ancestry-2: layer-0, layer-1, layer-2, layer-3b

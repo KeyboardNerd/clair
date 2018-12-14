@@ -15,15 +15,15 @@ const (
 		INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
 
 	findAncestryLayerHashes = `
-		SELECT layer.hash, ancestry_layer.ancestry_index
+		SELECT layer.hash, ancestry_layer.layer_index
 		FROM layer, ancestry_layer
 		WHERE ancestry_layer.ancestry_id = $1
 			AND ancestry_layer.layer_id = layer.id
-		ORDER BY ancestry_layer.ancestry_index ASC`
+		ORDER BY ancestry_layer.layer_index ASC`
 
 	findAncestryFeatures = `
 		SELECT namespace.name, namespace.version_format, feature.name, 
-			feature.version, feature.version_format, ancestry_layer.ancestry_index, 
+			feature.version, feature.version_format, ancestry_layer.layer_index, 
 			ancestry_feature.feature_detector_id, ancestry_feature.namespace_detector_id
 		FROM namespace, feature, namespaced_feature, ancestry_layer, ancestry_feature
 		WHERE ancestry_layer.ancestry_id = $1
@@ -35,7 +35,7 @@ const (
 	findAncestryID       = `SELECT id FROM ancestry WHERE name = $1`
 	removeAncestry       = `DELETE FROM ancestry WHERE name = $1`
 	insertAncestryLayers = `
-		INSERT INTO ancestry_layer (ancestry_id, ancestry_index, layer_id) VALUES ($1, $2, $3)
+		INSERT INTO ancestry_layer (ancestry_id, layer_index, layer_id) VALUES ($1, $2, $3)
 		RETURNING id`
 	insertAncestryFeatures = `
 		INSERT INTO ancestry_feature
@@ -193,7 +193,7 @@ func (tx *pgSession) findAncestryLayers(id int64) ([]database.AncestryLayer, err
 			log.WithFields(log.Fields{
 				"ancestry ID":               id,
 				"duplicated ancestry index": index,
-			}).WithError(database.ErrInconsistent).Error("ancestry layers with same ancestry_index is not allowed")
+			}).WithError(database.ErrInconsistent).Error("ancestry layers with same layer_index is not allowed")
 			return nil, database.ErrInconsistent
 		}
 	}
@@ -231,7 +231,7 @@ func (tx *pgSession) findAncestryLayerHashes(ancestryID int64) (map[int64]string
 }
 
 func (tx *pgSession) findAncestryFeatures(ancestryID int64, detectors detectorMap) (map[int64][]database.AncestryFeature, error) {
-	// ancestry_index -> ancestry features
+	// layer_index -> ancestry features
 	featureMap := make(map[int64][]database.AncestryFeature)
 	// retrieve ancestry layer's namespaced features
 	rows, err := tx.Query(findAncestryFeatures, ancestryID)
