@@ -132,6 +132,13 @@ var (
 				namespace_detector_id INT REFERENCES detector ON DELETE CASCADE,
 				UNIQUE (ancestry_layer_id, namespaced_feature_id));`,
 
+			`CREATE TABLE IF NOT EXISTS ancestry_feature_relation(
+				id SERIAL PRIMARY KEY,
+				ancestry_feature_1_id INT REFERENCES ancestry_feature ON DELETE CASCADE,
+				ancestry_feature_2_id INT REFERENCES ancestry_feature ON DELETE CASCADE,
+				relation TEXT NOT NULL,
+				UNIQUE(ancestry_feature_1_id, ancestry_feature_2_id, relation));`,
+
 			`CREATE TABLE IF NOT EXISTS ancestry_detector(
 				id SERIAL PRIMARY KEY,
 				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
