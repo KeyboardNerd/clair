@@ -35,6 +35,11 @@ type Ancestry struct {
 	Layers []AncestryLayer
 }
 
+// NewAncestry creates a new ancestry
+func NewAncestry(name string, detectors []Detector, layers []AncestryLayer) *Ancestry {
+	return &Ancestry{name, detectors, layers}
+}
+
 // Valid checks if the ancestry is compliant to spec.
 func (a *Ancestry) Valid() bool {
 	if a == nil {
@@ -145,8 +150,7 @@ type LayerFeature struct {
 	Feature
 
 	// By is the detector found the feature.
-	By      Detector
-	Related []RelatedFeature
+	By Detector
 }
 
 // RelatedFeature stores the relationship between two features

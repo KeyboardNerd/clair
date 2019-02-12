@@ -56,9 +56,10 @@ func isIgnored(packageName string) bool {
 }
 
 func valid(pkg *database.Feature) bool {
-	return pkg.Name != "" && pkg.Version != "" &&
-		((pkg.SourceName == "" && pkg.SourceVersion != "") ||
-			(pkg.SourceName != "" && pkg.SourceVersion != ""))
+	return true
+	// return pkg.Name != "" && pkg.Version != "" &&
+	// 	((pkg.SourceName == "" && pkg.SourceVersion != "") ||
+	// 		(pkg.SourceName != "" && pkg.SourceVersion != ""))
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
@@ -202,7 +203,7 @@ func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 		return fmt.Errorf("unexpected package name, expect: not empty")
 	}
 
-	pkg.SourceName = name
-	pkg.SourceVersion = concatVersion
+	//	pkg.SourceName = name
+	//	pkg.SourceVersion = concatVersion
 	return nil
 }

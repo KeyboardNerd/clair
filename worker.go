@@ -15,7 +15,6 @@
 package clair
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/deckarep/golang-set"
@@ -298,103 +297,6 @@ func getCommonDetectors(layers []database.Layer) mapset.Set {
 	}
 
 	return commonDetectors
-}
-
-// computeAncestryLayers computes ancestry's layers along with what features are
-// introduced.
-func computeAncestryLayers(layers []database.Layer) ([]database.AncestryLayer, []database.Detector, error) {
-	if len(layers) == 0 {
-		return nil, nil, nil
-	}
-
-	commonDetectors := getCommonDetectors(layers)
-	// version format -> namespace
-	namespaces := map[string]database.LayerNamespace{}
-	// version format -> feature ID -> feature
-	features := map[string]map[string]introducedFeature{}
-	ancestryLayers := []database.AncestryLayer{}
-	for index, layer := range layers {
-		initializedLayer := database.AncestryLayer{Hash: layer.Hash}
-		ancestryLayers = append(ancestryLayers, initializedLayer)
-
-		// Precondition: namespaces and features contain the result from union
-		// of all parents.
-		for _, ns := range layer.Namespaces {
-			if !commonDetectors.Contains(ns.By) {
-				continue
-			}
-
-			namespaces[ns.VersionFormat] = ns
-		}
-
-		// version format -> feature ID -> feature
-		currentFeatures := map[string]map[string]introducedFeature{}
-		for _, f := range layer.Features {
-			if !commonDetectors.Contains(f.By) {
-				continue
-			}
-
-			if ns, ok := namespaces[f.VersionFormat]; ok {
-				var currentMap map[string]introducedFeature
-				if currentMap, ok = currentFeatures[f.VersionFormat]; !ok {
-					currentFeatures[f.VersionFormat] = make(map[string]introducedFeature)
-					currentMap = currentFeatures[f.VersionFormat]
-				}
-
-				inherited := false
-				if mapF, ok := features[f.VersionFormat]; ok {
-					if parentFeature, ok := mapF[f.Name+":"+f.Version]; ok {
-						currentMap[f.Name+":"+f.Version] = parentFeature
-						inherited = true
-					}
-				}
-
-				if !inherited {
-					currentMap[f.Name+":"+f.Version] = introducedFeature{
-						feature: database.AncestryFeature{
-							NamespacedFeature: database.NamespacedFeature{
-								Feature:   f.Feature,
-								Namespace: ns.Namespace,
-							},
-							NamespaceBy: ns.By,
-							FeatureBy:   f.By,
-						},
-						layerIndex: index,
-					}
-				}
-
-			} else {
-				return nil, nil, errors.New("No corresponding version format")
-			}
-		}
-
-		// NOTE(Sida): we update the feature map in some version format
-		// only if there's at least one feature with that version format. This
-		// approach won't differentiate feature file removed vs all detectable
-		// features removed from that file vs feature file not changed.
-		//
-		// One way to differentiate (feature file removed or not changed) vs
-		// all detectable features removed is to pass in the file status.
-		for vf, mapF := range currentFeatures {
-			features[vf] = mapF
-		}
-	}
-
-	for _, featureMap := range features {
-		for _, feature := range featureMap {
-			ancestryLayers[feature.layerIndex].Features = append(
-				ancestryLayers[feature.layerIndex].Features,
-				feature.feature,
-			)
-		}
-	}
-
-	detectors := make([]database.Detector, 0, commonDetectors.Cardinality())
-	for d := range commonDetectors.Iter() {
-		detectors = append(detectors, d.(database.Detector))
-	}
-
-	return ancestryLayers, detectors, nil
 }
 
 func extractRequiredFiles(imageFormat string, req *processRequest) (tarutil.FilesMap, error) {

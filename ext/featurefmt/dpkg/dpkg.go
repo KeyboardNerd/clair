@@ -46,13 +46,13 @@ func valid(pkg *database.Feature) bool {
 }
 
 func addSourcePackage(pkg *database.Feature) {
-	if pkg.SourceName == "" {
-		pkg.SourceName = pkg.Name
-	}
+	// if pkg.SourceName == "" {
+	// 	pkg.SourceName = pkg.Name
+	// }
 
-	if pkg.SourceVersion == "" {
-		pkg.SourceVersion = pkg.Version
-	}
+	// if pkg.SourceVersion == "" {
+	// 	pkg.SourceVersion = pkg.Version
+	// }
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
@@ -87,13 +87,13 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 				md[dpkgSrcCaptureRegexpNames[i]] = strings.TrimSpace(n)
 			}
 
-			pkg.SourceName = md["name"]
+			//			pkg.SourceName = md["name"]
 			if md["version"] != "" {
 				version := md["version"]
 				if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
 					log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 				} else {
-					pkg.SourceVersion = version
+					//					pkg.SourceVersion = version
 				}
 			}
 		} else if strings.HasPrefix(line, "Version: ") {
