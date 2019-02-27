@@ -74,13 +74,6 @@ func init() {
 	database.Register("pgsql", openDatabase)
 }
 
-// pgSessionCache is the session's cache, which holds the pgSQL's cache and the
-// individual session's cache. Only when session.Commit is called, all the
-// changes to pgSQL cache will be applied.
-type pgSessionCache struct {
-	c *lru.ARCCache
-}
-
 type pgSQL struct {
 	*sql.DB
 

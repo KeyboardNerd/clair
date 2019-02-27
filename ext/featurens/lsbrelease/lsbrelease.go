@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -41,12 +43,14 @@ func init() {
 	featurens.RegisterDetector("lsb-release", "1.0", &detector{})
 }
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) (database.NamespaceDetectResult, error) {
+	detectResult := database.NamespaceDetectResult{Status: database.NotFound}
 	f, hasFile := files["etc/lsb-release"]
 	if !hasFile {
-		return nil, nil
+		return detectResult, nil
 	}
 
+	detectResult.Status = database.Changed
 	var OS, version string
 
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
@@ -80,17 +84,20 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
 		versionFormat = rpm.ParserName
 	default:
-		return nil, nil
+		logrus.WithField("OS", OS).Warn("unsupported namespace")
+		return detectResult, nil
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{
+		detectResult.Namespace = &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: versionFormat,
-		}, nil
+		}
+
+		return detectResult, nil
 	}
 
-	return nil, nil
+	return detectResult, nil
 }
 
 func (d *detector) RequiredFilenames() []string {

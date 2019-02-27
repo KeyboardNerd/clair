@@ -74,14 +74,14 @@ func FindKeyValueAndRollback(datastore Datastore, key string) (value string, ok 
 
 // PersistPartialLayerAndCommit wraps session PersistLayer function with begin and
 // commit.
-func PersistPartialLayerAndCommit(datastore Datastore, layer *Layer) error {
+func PersistPartialLayerAndCommit(datastore Datastore, hash string, features DetectedFeatures, namespaces DetectedNamespaces) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := tx.PersistLayer(layer.Hash, layer.Features, layer.Namespaces, layer.By); err != nil {
+	if err := tx.PersistLayer(hash, features, namespaces); err != nil {
 		return err
 	}
 
@@ -276,49 +276,6 @@ func DiffDetectors(d1 []Detector, d2 []Detector) []Detector {
 	}
 
 	return detectors
-}
-
-// MergeLayers merges all content in new layer to l, where the content is
-// updated.
-func MergeLayers(l *Layer, new *Layer) *Layer {
-	featureSet := mapset.NewSet()
-	namespaceSet := mapset.NewSet()
-	bySet := mapset.NewSet()
-
-	for _, f := range l.Features {
-		featureSet.Add(f)
-	}
-
-	for _, ns := range l.Namespaces {
-		namespaceSet.Add(ns)
-	}
-
-	for _, d := range l.By {
-		bySet.Add(d)
-	}
-
-	for _, feature := range new.Features {
-		if !featureSet.Contains(feature) {
-			l.Features = append(l.Features, feature)
-			featureSet.Add(feature)
-		}
-	}
-
-	for _, namespace := range new.Namespaces {
-		if !namespaceSet.Contains(namespace) {
-			l.Namespaces = append(l.Namespaces, namespace)
-			namespaceSet.Add(namespace)
-		}
-	}
-
-	for _, detector := range new.By {
-		if !bySet.Contains(detector) {
-			l.By = append(l.By, detector)
-			bySet.Add(detector)
-		}
-	}
-
-	return l
 }
 
 // AcquireLock acquires a named global lock for a duration.

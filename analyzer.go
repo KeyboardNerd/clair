@@ -57,7 +57,7 @@ func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 stri
 	layer, found, err := database.FindLayerAndRollback(store, blobSha256)
 	logFields := log.Fields{"layer.Hash": blobSha256}
 	if err != nil {
-		log.WithError(err).WithFields(logFields).Error("failed to find layer in the storage")
+		log.WithError(err).WithFields(logFields).Error("failed to retrieve layer from the storage")
 		return nil, StorageError
 	}
 
@@ -70,7 +70,6 @@ func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 stri
 	toScan := database.DiffDetectors(EnabledDetectors(), scannedBy)
 	if len(toScan) != 0 {
 		log.WithFields(logFields).Debug("scan layer blob not already scanned")
-		newLayerScanResult := &database.Layer{Hash: blobSha256, By: toScan}
 		blob, err := retrieveLayerBlob(ctx, downloadURI, downloadHeaders)
 		if err != nil {
 			log.WithError(err).WithFields(logFields).Error("failed to retrieve layer blob")
@@ -90,24 +89,26 @@ func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 stri
 			return nil, ExtractBlobError
 		}
 
-		newLayerScanResult.Features, err = featurefmt.ListFeatures(fileMap, toScan)
+		detectedFeatures, err = featurefmt.ListFeatures(fileMap, toScan)
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("failed to detect features")
 			return nil, FeatureDetectorError
 		}
 
-		newLayerScanResult.Namespaces, err = featurens.Detect(fileMap, toScan)
+		detectedNamespaces, err = featurens.Detect(fileMap, toScan)
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("failed to detect namespaces")
 			return nil, NamespaceDetectorError
 		}
 
-		if err = saveLayerChange(store, newLayerScanResult); err != nil {
+		if err = saveLayerChange(store, detectedFeatures, detectedNamespaces); err != nil {
 			log.WithFields(logFields).WithError(err).Error("failed to store layer change")
 			return nil, StorageError
 		}
 
-		layer = database.MergeLayers(layer, newLayerScanResult)
+		if layer, ok, err = database.FindLayerAndRollback(store, blobSha256); err != nil {
+			log.WithField(logFields).WithError(err).Error("failed to retrieve layer from the storage")
+		}
 	} else {
 		log.WithFields(logFields).Debug("found scanned layer blob")
 	}
@@ -137,7 +138,7 @@ func saveLayerChange(store database.Datastore, layer *database.Layer) error {
 		return err
 	}
 
-	if err := database.PersistPartialLayerAndCommit(store, layer); err != nil {
+	if err := database.PersistPartialLayerAndCommit(store, layer.Hash, layer.Content); err != nil {
 		return err
 	}
 

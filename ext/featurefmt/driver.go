@@ -17,9 +17,8 @@
 package featurefmt
 
 import (
+	"fmt"
 	"sync"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/tarutil"
@@ -33,7 +32,7 @@ var (
 // Lister represents an ability to list the features present in an image layer.
 type Lister interface {
 	// ListFeatures produces a list of Features present in an image layer.
-	ListFeatures(tarutil.FilesMap) ([]database.Feature, error)
+	ListFeatures(tarutil.FilesMap) (database.FeatureDetectResult, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the ListFeatures method.
@@ -72,32 +71,23 @@ func RegisterLister(name string, version string, l Lister) {
 
 // ListFeatures produces the list of Features in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) ([]database.LayerFeature, error) {
+func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) (database.DetectedFeatures, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	features := []database.LayerFeature{}
+	features := make(database.DetectedFeatures)
 	for _, d := range toUse {
-		// Only use the detector with the same type
 		if d.DType != database.FeatureDetectorType {
 			continue
 		}
 
 		if lister, ok := listers[d.Name]; ok {
-			fs, err := lister.ListFeatures(files)
-			if err != nil {
+			var err error
+			if features[d], err = lister.ListFeatures(files); err != nil {
 				return nil, err
 			}
-
-			for _, f := range fs {
-				features = append(features, database.LayerFeature{
-					Feature: f,
-					By:      lister.info,
-				})
-			}
-
 		} else {
-			log.WithField("Name", d).Fatal("unknown feature detector")
+			panic(fmt.Sprintf("unknown feature detector: %#v", d))
 		}
 	}
 

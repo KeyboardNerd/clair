@@ -41,7 +41,8 @@ func init() {
 	featurens.RegisterDetector("redhat-release", "1.0", &detector{})
 }
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) (database.NamespaceDetectResult, error) {
+	detectResult := database.NamespaceDetectResult{Status: database.NotFound}
 	for _, filePath := range d.RequiredFilenames() {
 		f, hasFile := files[filePath]
 		if !hasFile {
@@ -53,33 +54,39 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		// Attempt to match Oracle Linux.
 		r = oracleReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
-			return &database.Namespace{
+			detectResult.Status = database.Changed
+			detectResult.Namespace = &database.Namespace{
 				Name:          strings.ToLower(r[1]) + ":" + r[3],
 				VersionFormat: rpm.ParserName,
-			}, nil
+			}
+			break
 		}
 
 		// Attempt to match RHEL.
 		r = redhatReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
 			// TODO(vbatts): this is a hack until https://github.com/coreos/clair/pull/193
-			return &database.Namespace{
+			detectResult.Status = database.Changed
+			detectResult.Namespace = &database.Namespace{
 				Name:          "centos" + ":" + r[3],
 				VersionFormat: rpm.ParserName,
-			}, nil
+			}
+			break
 		}
 
 		// Atempt to match CentOS.
 		r = centosReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
-			return &database.Namespace{
+			detectResult.Status = database.Changed
+			detectResult.Namespace = &database.Namespace{
 				Name:          strings.ToLower(r[1]) + ":" + r[3],
 				VersionFormat: rpm.ParserName,
-			}, nil
+			}
+			break
 		}
 	}
 
-	return nil, nil
+	return detectResult, nil
 }
 
 func (d detector) RequiredFilenames() []string {

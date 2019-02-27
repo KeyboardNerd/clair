@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -48,15 +50,16 @@ func init() {
 	featurens.RegisterDetector("os-release", "1.0", &detector{})
 }
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) (database.NamespaceDetectResult, error) {
 	var OS, version string
 
 	for _, filePath := range blacklistFilenames {
 		if _, hasFile := files[filePath]; hasFile {
-			return nil, nil
+			return database.NamespaceDetectResult{Status: database.BlackListed}, nil
 		}
 	}
 
+	detectResult := database.NamespaceDetectResult{Status: database.NotFound}
 	for _, filePath := range d.RequiredFilenames() {
 		f, hasFile := files[filePath]
 		if !hasFile {
@@ -87,16 +90,21 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle", "opensuse", "sles":
 		versionFormat = rpm.ParserName
 	default:
-		return nil, nil
+		logrus.WithField("namespace", OS).Warn("unsupported namespace")
+		return detectResult, nil
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{
+		detectResult.Status = database.Changed
+		detectResult.Namespace = &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: versionFormat,
-		}, nil
+		}
+
+		return detectResult, nil
 	}
-	return nil, nil
+
+	return detectResult, nil
 }
 
 func (d detector) RequiredFilenames() []string {

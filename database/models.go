@@ -103,50 +103,6 @@ type AncestryFeature struct {
 	NamespaceBy Detector `json:"namespaceBy"`
 }
 
-// Layer is a layer with all the detected features and namespaces.
-type Layer struct {
-	// Hash is the sha-256 tarsum on the layer's blob content.
-	Hash string `json:"hash"`
-	// By contains a list of detectors scanned this Layer.
-	By         []Detector       `json:"by"`
-	Namespaces []LayerNamespace `json:"namespaces"`
-	Features   []LayerFeature   `json:"features"`
-}
-
-func (l *Layer) GetFeatures() []Feature {
-	features := make([]Feature, 0, len(l.Features))
-	for _, f := range l.Features {
-		features = append(features, f.Feature)
-	}
-
-	return features
-}
-
-func (l *Layer) GetNamespaces() []Namespace {
-	namespaces := make([]Namespace, 0, len(l.Namespaces))
-	for _, ns := range l.Namespaces {
-		namespaces = append(namespaces, ns.Namespace)
-	}
-
-	return namespaces
-}
-
-// LayerNamespace is a namespace with detection information.
-type LayerNamespace struct {
-	Namespace `json:"namespace"`
-
-	// By is the detector found the namespace.
-	By Detector `json:"by"`
-}
-
-// LayerFeature is a feature with detection information.
-type LayerFeature struct {
-	Feature `json:"feature"`
-
-	// By is the detector found the feature.
-	By Detector `json:"by"`
-}
-
 // Namespace is the contextual information around features.
 //
 // e.g. Debian:7, NodeJS.

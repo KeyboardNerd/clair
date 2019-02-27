@@ -36,28 +36,8 @@ const (
 		UNION
 		SELECT id FROM layer WHERE hash = $1`
 
-	findLayerFeatures = `
-		SELECT f.name, f.version, f.version_format, t.name, lf.detector_id
-			FROM layer_feature AS lf, feature AS f, feature_type AS t
-			WHERE lf.feature_id = f.id
-				AND t.id = f.type
-				AND lf.layer_id = $1`
-
-	findLayerNamespaces = `
-		SELECT ns.name, ns.version_format, ln.detector_id
-			FROM layer_namespace AS ln, namespace AS ns
-			WHERE ln.namespace_id = ns.id
-				AND ln.layer_id = $1`
-
 	findLayerID = `SELECT id FROM layer WHERE hash = $1`
 )
-
-// dbLayerNamespace represents the layer_namespace table.
-type dbLayerNamespace struct {
-	layerID     int64
-	namespaceID int64
-	detectorID  int64
-}
 
 // dbLayerFeature represents the layer_feature table
 type dbLayerFeature struct {
@@ -68,9 +48,6 @@ type dbLayerFeature struct {
 
 func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
 	layer := database.Layer{Hash: hash}
-	if hash == "" {
-		return layer, false, commonerr.NewBadRequestError("non empty layer hash is expected.")
-	}
 
 	layerID, ok, err := tx.findLayerID(hash)
 	if err != nil || !ok {
@@ -123,16 +100,12 @@ func sanitizePersistLayerInput(hash string, features []database.LayerFeature, na
 }
 
 // PersistLayer saves the content of a layer to the database.
-func (tx *pgSession) PersistLayer(hash string, features []database.LayerFeature, namespaces []database.LayerNamespace, detectedBy []database.Detector) error {
+func (tx *pgSession) PersistLayer(hash string, content database.LayerContent) error {
 	var (
 		err         error
 		id          int64
 		detectorIDs []int64
 	)
-
-	if err = sanitizePersistLayerInput(hash, features, namespaces, detectedBy); err != nil {
-		return err
-	}
 
 	if id, err = tx.soiLayer(hash); err != nil {
 		return err

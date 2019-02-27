@@ -35,12 +35,14 @@ func init() {
 	featurens.RegisterDetector("apt-sources", "1.0", &detector{})
 }
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) (database.NamespaceDetectResult, error) {
+	detectResult := database.NamespaceDetectResult{Status: database.NotFound}
 	f, hasFile := files["etc/apt/sources.list"]
 	if !hasFile {
-		return nil, nil
+		return detectResult, nil
 	}
 
+	detectResult.Status = database.Changed
 	var OS, version string
 
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
@@ -79,12 +81,13 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{
+		detectResult.Namespace = &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: dpkg.ParserName,
-		}, nil
+		}
 	}
-	return nil, nil
+
+	return detectResult, nil
 }
 
 func (d detector) RequiredFilenames() []string {

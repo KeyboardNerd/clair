@@ -166,22 +166,18 @@ func AssertFeaturesEqual(t *testing.T, expected, actual []Feature) bool {
 
 // AssertLayerFeaturesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerFeaturesEqual(t *testing.T, expected, actual []LayerFeature) bool {
+func AssertLayerFeaturesEqual(t *testing.T, expected, actual DetectedFeatures) bool {
 	if !assert.Len(t, actual, len(expected)) {
 		return false
 	}
 
-	expectedInterfaces := []interface{}{}
-	for _, e := range expected {
-		expectedInterfaces = append(expectedInterfaces, e)
+	for detector, features := range expected {
+		if !AssertFeaturesEqual(t, features.Features, actual[detector].Features) {
+			return false
+		}
 	}
 
-	actualInterfaces := []interface{}{}
-	for _, a := range actual {
-		actualInterfaces = append(actualInterfaces, a)
-	}
-
-	return AssertElementsEqual(t, expectedInterfaces, actualInterfaces)
+	return true
 }
 
 // AssertNamespacesEqual asserts content in actual equals to content in
@@ -202,18 +198,14 @@ func AssertNamespacesEqual(t *testing.T, expected, actual []Namespace) bool {
 
 // AssertLayerNamespacesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerNamespacesEqual(t *testing.T, expected, actual []LayerNamespace) bool {
-	expectedInterfaces := []interface{}{}
-	for _, e := range expected {
-		expectedInterfaces = append(expectedInterfaces, e)
+func AssertLayerNamespacesEqual(t *testing.T, expected, actual DetectedNamespaces) bool {
+	for detector, namespace := range expected {
+		if !assert.Equal(t, *namespace.Namespace, *actual[detector].Namespace) {
+			return false
+		}
 	}
 
-	actualInterfaces := []interface{}{}
-	for _, a := range actual {
-		actualInterfaces = append(actualInterfaces, a)
-	}
-
-	return AssertElementsEqual(t, expectedInterfaces, actualInterfaces)
+	return true
 }
 
 // AssertLayerEqual asserts actual layer equals to expected layer content wise.
@@ -227,7 +219,6 @@ func AssertLayerEqual(t *testing.T, expected, actual *Layer) bool {
 	}
 
 	return assert.Equal(t, expected.Hash, actual.Hash) &&
-		AssertDetectorsEqual(t, expected.By, actual.By) &&
 		AssertLayerFeaturesEqual(t, expected.Features, actual.Features) &&
 		AssertLayerNamespacesEqual(t, expected.Namespaces, actual.Namespaces)
 }

@@ -45,12 +45,14 @@ func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) (database.FeatureDetectResult, error) {
+	detectResult := database.FeatureDetectResult{Status: database.NotFound}
 	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
-		return []database.Feature{}, nil
+		return detectResult, nil
 	}
 
+	detectResult.Status = database.Changed
 	packages := mapset.NewSet()
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
 	for scanner.Scan() {
@@ -69,7 +71,8 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	detectResult.Features = database.ConvertFeatureSetToFeatures(packages)
+	return detectResult, nil
 }
 
 // parseDpkgDB consumes the status file scanner exactly one package info, until

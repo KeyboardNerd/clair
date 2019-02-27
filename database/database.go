@@ -133,7 +133,7 @@ type Session interface {
 	// PersistLayer appends a layer's content in the database.
 	//
 	// If any feature, namespace, or detector is not in the database, it returns not found error.
-	PersistLayer(hash string, features []LayerFeature, namespaces []LayerNamespace, detectedBy []Detector) error
+	PersistLayer(hash string, features DetectedFeatures, namespaces DetectedNamespaces) error
 
 	// FindLayer returns a layer with all detected features and
 	// namespaces.

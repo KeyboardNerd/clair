@@ -73,7 +73,7 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 		}
 
 		assert.Len(t, features, len(visited))
-		for _, f := range features {
+		for _, f := range features.Features {
 			assert.Equal(t, expectedVersionFormat, f.VersionFormat)
 			if ok, found := visited[f]; ok {
 				assert.Fail(t, "duplicated features is not allowed", "feature=%#v", f)

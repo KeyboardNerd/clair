@@ -29,8 +29,9 @@ import (
 )
 
 const (
-	osName            = "alpine"
-	alpineReleasePath = "etc/alpine-release"
+	osName                    = "alpine"
+	alpineReleasePath         = "etc/alpine-release"
+	whiteoutAlpineReleasePath = "etc/.wh.alpine-release"
 )
 
 var versionRegexp = regexp.MustCompile(`^(\d)+\.(\d)+\.(\d)+$`)
@@ -41,7 +42,7 @@ func init() {
 
 type detector struct{}
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) (database.NamespaceDetectResult, error) {
 	file, exists := files[alpineReleasePath]
 	if exists {
 		scanner := bufio.NewScanner(bytes.NewBuffer(file))
@@ -50,17 +51,32 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 			match := versionRegexp.FindStringSubmatch(line)
 			if len(match) > 0 {
 				versionNumbers := strings.Split(match[0], ".")
-				return &database.Namespace{
-					Name:          osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1],
-					VersionFormat: dpkg.ParserName,
+				return database.NamespaceDetectResult{
+					Status: database.Changed,
+					Namespace: &database.Namespace{
+						Name:          osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1],
+						VersionFormat: dpkg.ParserName,
+					},
 				}, nil
 			}
 		}
+
+		return database.NamespaceDetectResult{
+			Status: database.Changed,
+		}, nil
 	}
 
-	return nil, nil
+	if _, exists = files[whiteoutAlpineReleasePath]; exists {
+		return database.NamespaceDetectResult{
+			Status: database.Whiteout,
+		}, nil
+	}
+
+	return database.NamespaceDetectResult{
+		Status: database.NotFound,
+	}, nil
 }
 
 func (d detector) RequiredFilenames() []string {
-	return []string{alpineReleasePath}
+	return []string{alpineReleasePath, whiteoutAlpineReleasePath}
 }

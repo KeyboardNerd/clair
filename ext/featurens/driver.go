@@ -17,10 +17,10 @@
 package featurens
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
@@ -37,7 +37,7 @@ var (
 type Detector interface {
 	// Detect attempts to determine a Namespace from a FilesMap of an image
 	// layer.
-	Detect(tarutil.FilesMap) (*database.Namespace, error)
+	Detect(tarutil.FilesMap) (database.NamespaceDetectResult, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the Detect method.
@@ -75,11 +75,11 @@ func RegisterDetector(name string, version string, d Detector) {
 }
 
 // Detect uses detectors specified to retrieve the detect result.
-func Detect(files tarutil.FilesMap, toUse []database.Detector) ([]database.LayerNamespace, error) {
+func Detect(files tarutil.FilesMap, toUse []database.Detector) (database.DetectedNamespaces, error) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
 
-	namespaces := []database.LayerNamespace{}
+	namespaces := make(database.DetectedNamespaces)
 	for _, d := range toUse {
 		// Only use the detector with the same type
 		if d.DType != database.NamespaceDetectorType {
@@ -87,21 +87,12 @@ func Detect(files tarutil.FilesMap, toUse []database.Detector) ([]database.Layer
 		}
 
 		if detector, ok := detectors[d.Name]; ok {
-			namespace, err := detector.Detect(files)
-			if err != nil {
-				log.WithError(err).WithField("detector", d).Warning("failed while attempting to detect namespace")
+			var err error
+			if namespaces[d], err = detector.Detect(files); err != nil {
 				return nil, err
 			}
-
-			if namespace != nil {
-				log.WithFields(log.Fields{"detector": d, "namespace": namespace.Name}).Debug("detected namespace")
-				namespaces = append(namespaces, database.LayerNamespace{
-					Namespace: *namespace,
-					By:        detector.info,
-				})
-			}
 		} else {
-			log.WithField("detector", d).Fatal("unknown namespace detector")
+			panic(fmt.Sprintf("unknown namespace detector: %#v", d))
 		}
 	}
 
@@ -147,10 +138,10 @@ func TestDetector(t *testing.T, d Detector, testData []TestData) {
 		namespace, err := d.Detect(td.Files)
 		assert.Nil(t, err)
 
-		if namespace == nil {
+		if namespace.Namespace == nil {
 			assert.Equal(t, td.ExpectedNamespace, namespace)
 		} else {
-			assert.Equal(t, td.ExpectedNamespace.Name, namespace.Name)
+			assert.Equal(t, td.ExpectedNamespace.Name, namespace.Namespace.Name)
 		}
 	}
 }

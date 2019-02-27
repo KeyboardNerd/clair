@@ -63,6 +63,12 @@ var (
 				version TEXT NOT NULL,
 				dtype detector_type NOT NULL,
 				UNIQUE (name, version, dtype));`,
+
+			`CREATE TABLE IF NOT EXISTS detector_status (
+				id SERIAL PRIMARY KEY,
+				status TEXT NOT NULL);`,
+
+			`INSERT INTO detector_status(status) VALUES ('file_removed'), ('file_changed'), ('file_not_found');`,
 		},
 		Down: []string{
 			`DROP TABLE IF EXISTS detector CASCADE;`,
@@ -81,24 +87,21 @@ var (
 				id SERIAL PRIMARY KEY,
 				layer_id INT REFERENCES layer ON DELETE CASCADE,
 				detector_id INT REFERENCES detector ON DELETE CASCADE,
-				UNIQUE(layer_id, detector_id));`,
+				detector_status_id INT REFERENCES detector_status ON DELETE CASCADE);`,
 			`CREATE INDEX ON layer_detector(layer_id);`,
 
 			`CREATE TABLE IF NOT EXISTS layer_feature (
 				id SERIAL PRIMARY KEY,
-				layer_id INT REFERENCES layer ON DELETE CASCADE, 
-				feature_id INT REFERENCES feature ON DELETE CASCADE,
-				detector_id INT REFERENCES detector ON DELETE CASCADE,
-				UNIQUE (layer_id, feature_id));`,
-			`CREATE INDEX ON layer_feature(layer_id);`,
+				layer_detector_id NOT NULL INT REFERENCES layer_detector ON DELETE CASCADE,
+				feature_id INT REFERENCES feature ON DELETE CASCADE`,
+			`CREATE INDEX ON layer_feature(layer_detector_id);`,
 
 			`CREATE TABLE IF NOT EXISTS layer_namespace (
 				id SERIAL PRIMARY KEY,
-				layer_id INT REFERENCES layer ON DELETE CASCADE,
+				layer_detector_id NOT NULL INT REFERENCES layer_detector ON DELETE CASCADE,
 				namespace_id INT REFERENCES namespace ON DELETE CASCADE,
-				detector_id INT REFERENCES detector ON DELETE CASCADE,
-				UNIQUE (layer_id, namespace_id));`,
-			`CREATE INDEX ON layer_namespace(layer_id);`,
+				UNIQUE (layer_detector_id, namespace_id));`,
+			`CREATE INDEX ON layer_namespace(layer_detector_id);`,
 		},
 		Down: []string{
 			`DROP TABLE IF EXISTS layer, layer_detector, layer_feature, layer_namespace CASCADE;`,
