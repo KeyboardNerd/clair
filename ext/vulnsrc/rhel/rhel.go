@@ -350,13 +350,14 @@ func toFeatures(criteria criteria) []database.AffectedFeature {
 
 		if osVersion >= firstConsideredRHEL {
 			// TODO(vbatts) this is where features need multiple labels ('centos' and 'rhel')
-			featureVersion.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
+			featureVersion.Namespace.Name = "centos"
+			featureVersion.Namespace.Version = strconv.Itoa(osVersion)
 		} else {
 			continue
 		}
 
-		if featureVersion.Namespace.Name != "" && featureVersion.FeatureName != "" && featureVersion.AffectedVersion != "" && featureVersion.FixedInVersion != "" {
-			featureVersionParameters[featureVersion.Namespace.Name+":"+featureVersion.FeatureName] = featureVersion
+		if featureVersion.Namespace.Name != "" && featureVersion.Namespace.Version != "" && featureVersion.FeatureName != "" && featureVersion.AffectedVersion != "" && featureVersion.FixedInVersion != "" {
+			featureVersionParameters[featureVersion.Namespace.Name+":"+featureVersion.Namespace.Version+":"+featureVersion.FeatureName] = featureVersion
 		} else {
 			log.WithField("criterions", fmt.Sprintf("%v", criterions)).Warning("could not determine a valid package from criterions")
 		}

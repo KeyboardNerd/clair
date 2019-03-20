@@ -149,7 +149,12 @@ func (file *secDB) Vulnerabilities() (vulns []database.VulnerabilityWithAffected
 		return
 	}
 
-	namespace := database.Namespace{Name: "alpine:" + file.Distro, VersionFormat: dpkg.ParserName}
+	namespace := database.Namespace{
+		Name:          "alpine",
+		Version:       file.Distro,
+		VersionFormat: dpkg.ParserName,
+	}
+
 	for _, pkg := range file.Packages {
 		for version, cveNames := range pkg.Pkg.Fixes {
 			if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
@@ -182,7 +187,8 @@ func (file *secDB) Vulnerabilities() (vulns []database.VulnerabilityWithAffected
 						AffectedVersion: version,
 						FixedInVersion:  fixedInVersion,
 						Namespace: database.Namespace{
-							Name:          "alpine:" + file.Distro,
+							Name:          "alpine",
+							Version:       file.Distro,
 							VersionFormat: dpkg.ParserName,
 						},
 					},

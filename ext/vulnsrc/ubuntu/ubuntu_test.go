@@ -48,7 +48,8 @@ func TestUbuntuParser(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "ubuntu:14.04",
+					Name:          "ubuntu",
+					Version:       "14.04",
 					VersionFormat: dpkg.ParserName,
 				},
 				FeatureName:     "libmspack",
@@ -57,7 +58,8 @@ func TestUbuntuParser(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "ubuntu:15.04",
+					Name:          "ubuntu",
+					Version:       "15.04",
 					VersionFormat: dpkg.ParserName,
 				},
 				FeatureName:     "libmspack",
@@ -67,7 +69,8 @@ func TestUbuntuParser(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "ubuntu:15.10",
+					Name:          "ubuntu",
+					Version:       "15.10",
 					VersionFormat: dpkg.ParserName,
 				},
 				FeatureName:     "libmspack-anotherpkg",

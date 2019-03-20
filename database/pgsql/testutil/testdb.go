@@ -150,10 +150,15 @@ func CreateTestTxWithFixtures(t *testing.T, testName string) (*sql.Tx, func()) {
 		// ensure to cleanup when loadFixtures failed
 		if r := recover(); r != nil {
 			cleanup()
+			panic("loadFixture failed")
 		}
 	}()
 
 	loadFixtures(tx)
+	if tx == nil {
+		panic("wtf")
+	}
+
 	return tx, cleanup
 }
 

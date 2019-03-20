@@ -14,6 +14,8 @@
 
 package database
 
+import "fmt"
+
 // StorageError is database error
 type StorageError struct {
 	reason   string
@@ -21,7 +23,11 @@ type StorageError struct {
 }
 
 func (e *StorageError) Error() string {
-	return e.reason
+	internalErr := ""
+	if e.original != nil {
+		internalErr = e.original.Error()
+	}
+	return fmt.Sprintf("%s, Internal Error='%s'", e.reason, internalErr)
 }
 
 // NewStorageErrorWithInternalError creates a new database error

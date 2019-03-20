@@ -149,7 +149,7 @@ func newmockUpdaterDatastore() *mockUpdaterDatastore {
 			for _, vuln := range vulnerabilities {
 				id := database.VulnerabilityID{
 					Name:      vuln.Name,
-					Namespace: vuln.Namespace.Name,
+					Namespace: vuln.Namespace,
 				}
 				if _, ok := session.copy.vulnerabilities[id]; ok {
 					return errors.New("Vulnerability already exists")
@@ -234,6 +234,7 @@ func TestCreatVulnerabilityNotification(t *testing.T) {
 	vf1 := "VersionFormat1"
 	ns1 := database.Namespace{
 		Name:          "namespace 1",
+		Version:       "1.0",
 		VersionFormat: vf1,
 	}
 	af1 := database.AffectedFeature{

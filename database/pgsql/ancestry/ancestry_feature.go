@@ -25,7 +25,7 @@ import (
 )
 
 const findAncestryFeatures = `
-	SELECT namespace.name, namespace.version_format, feature.name, 
+	SELECT namespace.name, namespace.version, namespace.version_format, feature.name, 
 		feature.version, feature.version_format, feature_type.name, ancestry_layer.ancestry_index, 
 		ancestry_feature.feature_detector_id, ancestry_feature.namespace_detector_id
 	FROM namespace, feature, feature_type, namespaced_feature, ancestry_layer, ancestry_feature
@@ -58,6 +58,7 @@ func FindAncestryFeatures(tx *sql.Tx, ancestryID int64, detectors detector.Detec
 
 		if err := rows.Scan(
 			&feature.Namespace.Name,
+			&feature.Namespace.Version,
 			&feature.Namespace.VersionFormat,
 			&feature.Feature.Name,
 			&feature.Feature.Version,

@@ -17,6 +17,8 @@ package layer
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
@@ -30,12 +32,12 @@ var persistLayerTests = []struct {
 	features   []database.LayerFeature
 	namespaces []database.LayerNamespace
 	layer      *database.Layer
-	err        string
+	err        bool
 }{
 	{
 		title: "invalid layer name",
 		name:  "",
-		err:   "expected non-empty layer hash",
+		err:   true,
 	},
 	{
 		title: "layer with inconsistent feature and detectors",
@@ -44,12 +46,12 @@ var persistLayerTests = []struct {
 		features: []database.LayerFeature{
 			{testutil.RealFeatures[1], testutil.RealDetectors[1], database.Namespace{}},
 		},
-		err: "parameters are not valid",
+		err: true,
 	},
 	{
 		title: "layer with non-existing feature",
 		name:  "random-forest",
-		err:   "associated immutable entities are missing in the database",
+		err:   true,
 		by:    []database.Detector{testutil.RealDetectors[2]},
 		features: []database.LayerFeature{
 			{testutil.FakeFeatures[1], testutil.RealDetectors[2], database.Namespace{}},
@@ -58,7 +60,7 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with non-existing namespace",
 		name:  "random-forest2",
-		err:   "associated immutable entities are missing in the database",
+		err:   true,
 		by:    []database.Detector{testutil.RealDetectors[1]},
 		namespaces: []database.LayerNamespace{
 			{testutil.FakeNamespaces[1], testutil.RealDetectors[1]},
@@ -67,7 +69,7 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with non-existing detector",
 		name:  "random-forest3",
-		err:   "associated immutable entities are missing in the database",
+		err:   true,
 		by:    []database.Detector{testutil.FakeDetector[1]},
 	},
 	{
@@ -149,16 +151,16 @@ func TestPersistLayer(t *testing.T) {
 	for _, test := range persistLayerTests {
 		t.Run(test.title, func(t *testing.T) {
 			err := PersistLayer(tx, test.name, test.features, test.namespaces, test.by)
-			if test.err != "" {
-				assert.EqualError(t, err, test.err, "unexpected error")
+			if test.err {
+				require.NotNil(t, err)
 				return
 			}
 
-			assert.Nil(t, err)
+			require.Nil(t, err)
 			if test.layer != nil {
 				layer, ok, err := FindLayer(tx, test.name)
-				assert.Nil(t, err)
-				assert.True(t, ok)
+				require.Nil(t, err)
+				require.True(t, ok)
 				database.AssertLayerEqual(t, test.layer, &layer)
 			}
 		})

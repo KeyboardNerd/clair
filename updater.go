@@ -579,7 +579,7 @@ func findVulnerabilityChanges(old []database.VulnerabilityWithAffected, new []da
 	for i, vuln := range old {
 		key := database.VulnerabilityID{
 			Name:      vuln.Name,
-			Namespace: vuln.Namespace.Name,
+			Namespace: vuln.Namespace,
 		}
 
 		if _, ok := changes[key]; ok {
@@ -591,7 +591,7 @@ func findVulnerabilityChanges(old []database.VulnerabilityWithAffected, new []da
 	for i, vuln := range new {
 		key := database.VulnerabilityID{
 			Name:      vuln.Name,
-			Namespace: vuln.Namespace.Name,
+			Namespace: vuln.Namespace,
 		}
 
 		if change, ok := changes[key]; ok {
@@ -657,7 +657,7 @@ func updateVulnerabilities(ctx context.Context, datastore database.Datastore, vu
 	for _, vuln := range vulnerabilities {
 		ids = append(ids, database.VulnerabilityID{
 			Name:      vuln.Name,
-			Namespace: vuln.Namespace.Name,
+			Namespace: vuln.Namespace,
 		})
 	}
 
@@ -696,7 +696,7 @@ func updateVulnerabilities(ctx context.Context, datastore database.Datastore, vu
 		if change.old != nil {
 			toRemove = append(toRemove, database.VulnerabilityID{
 				Name:      change.old.Name,
-				Namespace: change.old.Namespace.Name,
+				Namespace: change.old.Namespace,
 			})
 		}
 

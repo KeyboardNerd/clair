@@ -313,12 +313,13 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 					continue
 				}
 
-				releaseName := "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]
-				if _, ok := uniqueRelease[releaseName+"_:_"+md["package"]]; ok {
+				releaseName := "ubuntu"
+				releaseVersion := database.UbuntuReleasesMapping[md["release"]]
+				if _, ok := uniqueRelease[releaseName+":"+releaseVersion+"_:_"+md["package"]]; ok {
 					continue
 				}
 
-				uniqueRelease[releaseName+"_:_"+md["package"]] = struct{}{}
+				uniqueRelease[releaseName+":"+releaseVersion+"_:_"+md["package"]] = struct{}{}
 				var fixedinVersion string
 				if version == versionfmt.MaxVersion {
 					fixedinVersion = ""
@@ -331,6 +332,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 					FeatureType: affectedType,
 					Namespace: database.Namespace{
 						Name:          releaseName,
+						Version:       releaseVersion,
 						VersionFormat: dpkg.ParserName,
 					},
 					FeatureName:     md["package"],

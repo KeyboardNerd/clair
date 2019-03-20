@@ -25,22 +25,23 @@ import (
 )
 
 const (
-	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
+	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version = $2 AND version_format = $2` // remove
 )
 
 func queryPersistNamespace(count int) string {
 	return util.QueryPersist(count,
 		"namespace",
-		"namespace_name_version_format_key",
+		"namespace_name_version_version_format_key",
 		"name",
+		"version",
 		"version_format")
 }
 
 func querySearchNamespace(nsCount int) string {
 	return fmt.Sprintf(
-		`SELECT id, name, version_format 
-		FROM namespace WHERE (name, version_format) IN (%s)`,
-		util.QueryString(2, nsCount),
+		`SELECT id, name, version, version_format 
+		FROM namespace WHERE (name, version, version_format) IN (%s)`,
+		util.QueryString(3, nsCount),
 	)
 }
 
@@ -56,13 +57,14 @@ func PersistNamespaces(tx *sql.Tx, namespaces []database.Namespace) error {
 			namespaces[i].VersionFormat < namespaces[j].VersionFormat
 	})
 
-	keys := make([]interface{}, len(namespaces)*2)
+	keys := make([]interface{}, len(namespaces)*3)
 	for i, ns := range namespaces {
 		if ns.Name == "" || ns.VersionFormat == "" {
 			return commonerr.NewBadRequestError("Empty namespace name or version format is not allowed")
 		}
-		keys[i*2] = ns.Name
-		keys[i*2+1] = ns.VersionFormat
+		keys[i*3] = ns.Name
+		keys[i*3+1] = ns.Version
+		keys[i*3+2] = ns.VersionFormat
 	}
 
 	_, err := tx.Exec(queryPersistNamespace(len(namespaces)), keys...)
@@ -77,11 +79,12 @@ func FindNamespaceIDs(tx *sql.Tx, namespaces []database.Namespace) ([]sql.NullIn
 		return nil, nil
 	}
 
-	keys := make([]interface{}, len(namespaces)*2)
+	keys := make([]interface{}, len(namespaces)*3)
 	nsMap := map[database.Namespace]sql.NullInt64{}
 	for i, n := range namespaces {
-		keys[i*2] = n.Name
-		keys[i*2+1] = n.VersionFormat
+		keys[i*3] = n.Name
+		keys[i*3+1] = n.Version
+		keys[i*3+2] = n.VersionFormat
 		nsMap[n] = sql.NullInt64{}
 	}
 
@@ -97,7 +100,7 @@ func FindNamespaceIDs(tx *sql.Tx, namespaces []database.Namespace) ([]sql.NullIn
 		ns database.Namespace
 	)
 	for rows.Next() {
-		err := rows.Scan(&id, &ns.Name, &ns.VersionFormat)
+		err := rows.Scan(&id, &ns.Name, &ns.Version, &ns.VersionFormat)
 		if err != nil {
 			return nil, util.HandleError("searchNamespace", err)
 		}

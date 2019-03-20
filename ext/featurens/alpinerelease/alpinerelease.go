@@ -51,7 +51,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 			if len(match) > 0 {
 				versionNumbers := strings.Split(match[0], ".")
 				return &database.Namespace{
-					Name:          osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1],
+					Name:          osName,
+					Version:       "v" + versionNumbers[0] + "." + versionNumbers[1],
 					VersionFormat: dpkg.ParserName,
 				}, nil
 			}

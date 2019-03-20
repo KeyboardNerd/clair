@@ -44,14 +44,14 @@ func queryPersistNamespacedFeature(count int) string {
 
 func querySearchNamespacedFeature(nsfCount int) string {
 	return fmt.Sprintf(`
-	SELECT nf.id, f.name, f.version, f.version_format, t.name, n.name
+	SELECT nf.id, f.name, f.version, f.version_format, t.name, n.name, n.version
 		FROM namespaced_feature AS nf, feature AS f, namespace AS n, feature_type AS t
 		WHERE nf.feature_id = f.id
 			AND nf.namespace_id = n.id
 			AND n.version_format = f.version_format 
 			AND f.type = t.id
-			AND (f.name, f.version, f.version_format, t.name, n.name) IN (%s)`,
-		util.QueryString(5, nsfCount),
+			AND (f.name, f.version, f.version_format, t.name, n.name, n.version, n.version_format) IN (%s)`,
+		util.QueryString(7, nsfCount),
 	)
 }
 
@@ -130,9 +130,9 @@ func FindNamespacedFeatureIDs(tx *sql.Tx, nfs []database.NamespacedFeature) ([]s
 	}
 
 	nfsMap := map[database.NamespacedFeature]int64{}
-	keys := make([]interface{}, 0, len(nfs)*5)
+	keys := make([]interface{}, 0, len(nfs)*7)
 	for _, nf := range nfs {
-		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name)
+		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name, nf.Namespace.Version, nf.Namespace.VersionFormat)
 	}
 
 	rows, err := tx.Query(querySearchNamespacedFeature(len(nfs)), keys...)
@@ -147,7 +147,7 @@ func FindNamespacedFeatureIDs(tx *sql.Tx, nfs []database.NamespacedFeature) ([]s
 	)
 
 	for rows.Next() {
-		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.VersionFormat, &nf.Type, &nf.Namespace.Name)
+		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.VersionFormat, &nf.Type, &nf.Namespace.Name, &nf.Namespace.Version)
 		nf.Namespace.VersionFormat = nf.VersionFormat
 		if err != nil {
 			return nil, util.HandleError("searchNamespacedFeature", err)

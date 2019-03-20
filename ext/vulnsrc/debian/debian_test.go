@@ -43,7 +43,8 @@ func TestDebianParser(t *testing.T) {
 					{
 						FeatureType: affectedType,
 						Namespace: database.Namespace{
-							Name:          "debian:8",
+							Name:          "debian",
+							Version:       "8",
 							VersionFormat: dpkg.ParserName,
 						},
 						FeatureName:     "aptdaemon",
@@ -52,7 +53,8 @@ func TestDebianParser(t *testing.T) {
 					{
 						FeatureType: affectedType,
 						Namespace: database.Namespace{
-							Name:          "debian:unstable",
+							Name:          "debian",
+							Version:       "unstable",
 							VersionFormat: dpkg.ParserName,
 						},
 						FeatureName:     "aptdaemon",
@@ -73,7 +75,8 @@ func TestDebianParser(t *testing.T) {
 					{
 						FeatureType: affectedType,
 						Namespace: database.Namespace{
-							Name:          "debian:8",
+							Name:          "debian",
+							Version:       "8",
 							VersionFormat: dpkg.ParserName,
 						},
 						FeatureName:     "aptdaemon",
@@ -83,7 +86,8 @@ func TestDebianParser(t *testing.T) {
 					{
 						FeatureType: affectedType,
 						Namespace: database.Namespace{
-							Name:          "debian:unstable",
+							Name:          "debian",
+							Version:       "unstable",
 							VersionFormat: dpkg.ParserName,
 						},
 						FeatureName:     "aptdaemon",
@@ -93,7 +97,8 @@ func TestDebianParser(t *testing.T) {
 					{
 						FeatureType: affectedType,
 						Namespace: database.Namespace{
-							Name:          "debian:8",
+							Name:          "debian",
+							Version:       "8",
 							VersionFormat: dpkg.ParserName,
 						},
 						FeatureName:     "asterisk",

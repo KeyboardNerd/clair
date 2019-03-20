@@ -16,19 +16,23 @@ package database
 
 // Namespace is the contextual information around features.
 //
-// e.g. Debian:7, NodeJS.
+// e.g. Name = Debian, Version = 7.0, VersionFormat = dpkg
 type Namespace struct {
 	Name          string `json:"name"`
+	Version       string `json:"version"`
 	VersionFormat string `json:"versionFormat"`
 }
 
-func NewNamespace(name string, versionFormat string) *Namespace {
-	return &Namespace{name, versionFormat}
+// NewNamespace creates a new namespace.
+func NewNamespace(name string, version string, versionFormat string) *Namespace {
+	return &Namespace{name, version, versionFormat}
 }
 
+// Valid checks if the namespace is valid.
 func (ns *Namespace) Valid() bool {
-	if ns.Name == "" || ns.VersionFormat == "" {
+	if ns == nil || ns.Name == "" || ns.VersionFormat == "" || ns.Version == "" {
 		return false
 	}
+
 	return true
 }

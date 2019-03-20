@@ -27,9 +27,10 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS namespace (
 				id SERIAL PRIMARY KEY,
-				name TEXT NULL,
-				version_format TEXT,
-				UNIQUE (name, version_format));`,
+				name TEXT NOT NULL,
+				version TEXT NOT NULL,
+				version_format TEXT NOT NULL,
+				UNIQUE (name, version, version_format));`,
 			`CREATE INDEX ON namespace(name);`,
 
 			`CREATE TABLE IF NOT EXISTS feature (
@@ -157,7 +158,7 @@ var (
 				metadata TEXT NULL,
 				created_at TIMESTAMP WITH TIME ZONE,
 				deleted_at TIMESTAMP WITH TIME ZONE NULL);`,
-			`CREATE INDEX ON vulnerability(namespace_id, name);`,
+			`CREATE UNIQUE INDEX ON vulnerability(namespace_id, name);`,
 			`CREATE INDEX ON vulnerability(namespace_id);`,
 
 			// vulnerability_affected_feature is a de-normalized table to store

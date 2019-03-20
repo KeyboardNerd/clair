@@ -185,7 +185,8 @@ func TestInsertVulnerabilityNotifications(t *testing.T) {
 		New: &database.Vulnerability{
 			Name: "CVE-OPENSSL-1-DEB7",
 			Namespace: database.Namespace{
-				Name:          "debian:7",
+				Name:          "debian",
+				Version:       "7",
 				VersionFormat: "dpkg",
 			},
 		},

@@ -25,7 +25,7 @@ import (
 )
 
 const findLayerNamespaces = `
-SELECT ns.name, ns.version_format, ln.detector_id
+SELECT ns.name, ns.version, ns.version_format, ln.detector_id
 	FROM layer_namespace AS ln, namespace AS ns
 	WHERE ln.namespace_id = ns.id
 		AND ln.layer_id = $1`
@@ -59,7 +59,7 @@ func FindLayerNamespaces(tx *sql.Tx, layerID int64, detectors detector.DetectorM
 			detectorID int64
 		)
 
-		if err := rows.Scan(&namespace.Name, &namespace.VersionFormat, &detectorID); err != nil {
+		if err := rows.Scan(&namespace.Name, &namespace.Version, &namespace.VersionFormat, &detectorID); err != nil {
 			return nil, err
 		}
 

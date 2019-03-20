@@ -151,6 +151,7 @@ func TestDetector(t *testing.T, d Detector, testData []TestData) {
 			assert.Equal(t, td.ExpectedNamespace, namespace)
 		} else {
 			assert.Equal(t, td.ExpectedNamespace.Name, namespace.Name)
+			assert.Equal(t, td.ExpectedNamespace.Version, namespace.Version)
 		}
 	}
 }

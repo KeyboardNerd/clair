@@ -17,29 +17,38 @@ package namespace
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPersistNamespaces(t *testing.T) {
 	tx, cleanup := testutil.CreateTestTx(t, "PersistNamespaces")
 	defer cleanup()
-
 	ns1 := database.Namespace{}
-	ns2 := database.Namespace{Name: "t", VersionFormat: "b"}
+	ns2 := database.Namespace{Name: "debian", Version: "1.0", VersionFormat: "dpkg"}
 
 	// Empty Case
-	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{}))
+	// assert.Nil(t, PersistNamespaces(tx, []database.Namespace{}))
 	// Invalid Case
-	assert.NotNil(t, PersistNamespaces(tx, []database.Namespace{ns1}))
+	require.NotNil(t, PersistNamespaces(tx, []database.Namespace{ns1}))
 	// Duplicated Case
-	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2, ns2}))
+	require.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2, ns2}))
 	// Existing Case
-	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2}))
+	require.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2}))
 
-	nsList := testutil.ListNamespaces(t, tx)
+	nsList := testutil.ListNamespaces(tx)
 	assert.Len(t, nsList, 1)
 	assert.Equal(t, ns2, nsList[0])
+}
+
+func TestFindNamespaceIDs(t *testing.T) {
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "TestFindNamespaceIDs")
+	defer cleanup()
+	ids, err := FindNamespaceIDs(tx, []database.Namespace{testutil.RealNamespaces[1], testutil.RealNamespaces[2], testutil.FakeNamespaces[1]})
+	require.Nil(t, err)
+	require.True(t, ids[0].Valid && 1 == ids[0].Int64)
+	require.True(t, ids[1].Valid && 2 == ids[1].Int64)
+	require.False(t, ids[2].Valid)
 }

@@ -27,10 +27,10 @@ var (
 	}
 
 	RealNamespaces = map[int]database.Namespace{
-		1: {"debian:7", "dpkg"},
-		2: {"debian:8", "dpkg"},
-		3: {"fake:1.0", "rpm"},
-		4: {"cpe:/o:redhat:enterprise_linux:7::server", "rpm"},
+		1: {"debian", "7", "dpkg"},
+		2: {"debian", "8", "dpkg"},
+		3: {"fake", "1.0", "rpm"},
+		4: {"cpe:/o:redhat:enterprise_linux:7::server", "", "rpm"},
 	}
 
 	RealNamespacedFeatures = map[int]database.NamespacedFeature{
@@ -38,6 +38,7 @@ var (
 		2: {RealFeatures[2], RealNamespaces[1]},
 		3: {RealFeatures[2], RealNamespaces[2]},
 		4: {RealFeatures[3], RealNamespaces[1]},
+		5: {RealFeatures[4], RealNamespaces[4]},
 	}
 
 	RealDetectors = map[int]database.Detector{
@@ -64,7 +65,7 @@ var (
 			By:   []database.Detector{RealDetectors[1], RealDetectors[2], RealDetectors[3], RealDetectors[4]},
 			Features: []database.LayerFeature{
 				{RealFeatures[4], RealDetectors[3], database.Namespace{}},
-				{RealFeatures[3], RealDetectors[2], database.Namespace{}},
+				{RealFeatures[3], RealDetectors[2], RealNamespaces[4]},
 			},
 			Namespaces: []database.LayerNamespace{
 				{RealNamespaces[1], RealDetectors[1]},
@@ -136,6 +137,11 @@ var (
 		},
 	}
 
+	RealFeatureType = map[int]database.FeatureType{
+		1: database.SourcePackage,
+		2: database.BinaryPackage,
+	}
+
 	FakeFeatures = map[int]database.Feature{
 		1: {
 			Name:          "ourchat",
@@ -146,7 +152,7 @@ var (
 	}
 
 	FakeNamespaces = map[int]database.Namespace{
-		1: {"green hat", "rpm"},
+		1: {"green hat", "1.0", "rpm"},
 	}
 
 	FakeNamespacedFeatures = map[int]database.NamespacedFeature{

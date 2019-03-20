@@ -45,7 +45,8 @@ func TestOracleParserOneCve(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "oracle:7",
+					Name:          "oracle",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c",
@@ -55,7 +56,8 @@ func TestOracleParserOneCve(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "oracle:7",
+					Name:          "oracle",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c-devel",
@@ -65,7 +67,8 @@ func TestOracleParserOneCve(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "oracle:7",
+					Name:          "oracle",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c-doc",

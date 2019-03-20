@@ -28,7 +28,7 @@ import (
 
 const findLayerFeatures = `
 SELECT
-	f.name, f.version, f.version_format, ft.name, lf.detector_id, ns.name, ns.version_format
+	f.name, f.version, f.version_format, ft.name, lf.detector_id, ns.name, ns.version, ns.version_format
 FROM
 	layer_feature AS lf
 LEFT JOIN feature f on f.id = lf.feature_id
@@ -68,12 +68,13 @@ func FindLayerFeatures(tx *sql.Tx, layerID int64, detectors detector.DetectorMap
 			detectorID int64
 			feature    database.LayerFeature
 		)
-		var namespaceName, namespaceVersion sql.NullString
-		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID, &namespaceName, &namespaceVersion); err != nil {
+		var namespaceName, namespaceVersion, namespaceVersionFormat sql.NullString
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID, &namespaceName, &namespaceVersion, &namespaceVersionFormat); err != nil {
 			return nil, util.HandleError("findLayerFeatures", err)
 		}
 		feature.PotentialNamespace.Name = namespaceName.String
-		feature.PotentialNamespace.VersionFormat = namespaceVersion.String
+		feature.PotentialNamespace.Version = namespaceVersion.String
+		feature.PotentialNamespace.VersionFormat = namespaceVersionFormat.String
 
 		feature.By = detectors.ByID[detectorID]
 		features = append(features, feature)

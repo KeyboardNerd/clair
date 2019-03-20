@@ -410,11 +410,12 @@ func toFeatureVersions(criteria criteria, osFlavor, osVersion string) []database
 			}
 		}
 
-		featureVersion.Namespace.Name = fmt.Sprintf("%s:%s", osFlavor, osVersion)
+		featureVersion.Namespace.Name = osFlavor
+		featureVersion.Namespace.Version = osVersion
 		featureVersion.Namespace.VersionFormat = rpm.ParserName
 
-		if featureVersion.Namespace.Name != "" && featureVersion.FeatureName != "" && featureVersion.AffectedVersion != "" && featureVersion.FixedInVersion != "" {
-			featureVersionParameters[featureVersion.Namespace.Name+":"+featureVersion.FeatureName] = featureVersion
+		if featureVersion.Namespace.Name != "" && featureVersion.Namespace.Version != "" && featureVersion.FeatureName != "" && featureVersion.AffectedVersion != "" && featureVersion.FixedInVersion != "" {
+			featureVersionParameters[featureVersion.Namespace.Name+":"+featureVersion.Namespace.Version+":"+featureVersion.FeatureName] = featureVersion
 		} else {
 			log.WithField("criterions", fmt.Sprintf("%v", criterions)).Warning("could not determine a valid package from criterions")
 		}

@@ -15,7 +15,6 @@
 package suse
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -49,7 +48,8 @@ func TestOpenSUSEParser(t *testing.T) {
 		expectedFeatures := []database.AffectedFeature{
 			{
 				Namespace: database.Namespace{
-					Name:          fmt.Sprintf("%s:%s", u.NamespaceName, osVersion),
+					Name:          u.NamespaceName,
+					Version:       osVersion,
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xfsprogs",
@@ -58,7 +58,8 @@ func TestOpenSUSEParser(t *testing.T) {
 			},
 			{
 				Namespace: database.Namespace{
-					Name:          fmt.Sprintf("%s:%s", u.NamespaceName, osVersion),
+					Name:          u.NamespaceName,
+					Version:       osVersion,
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xfsprogs-devel",
@@ -97,7 +98,8 @@ func TestSUSEParser(t *testing.T) {
 		expectedFeatures := []database.AffectedFeature{
 			{
 				Namespace: database.Namespace{
-					Name:          fmt.Sprintf("%s:%s", u.NamespaceName, osVersion),
+					Name:          u.NamespaceName,
+					Version:       osVersion,
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xfsprogs",
@@ -106,7 +108,8 @@ func TestSUSEParser(t *testing.T) {
 			},
 			{
 				Namespace: database.Namespace{
-					Name:          "sles:12.1",
+					Name:          "sles",
+					Version:       "12.1",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xfsprogs",

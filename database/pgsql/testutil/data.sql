@@ -1,9 +1,9 @@
 -- initialize entities
-INSERT INTO namespace (id, name, version_format) VALUES
-  (1, 'debian:7', 'dpkg'),
-  (2, 'debian:8', 'dpkg'),
-  (3, 'fake:1.0', 'rpm'),
-  (4, 'cpe:/o:redhat:enterprise_linux:7::server', 'rpm');
+INSERT INTO namespace (id, name, version, version_format) VALUES
+  (1, 'debian', '7', 'dpkg'),
+  (2, 'debian', '8', 'dpkg'),
+  (3, 'fake', '1.0', 'rpm'),
+  (4, 'cpe:/o:redhat:enterprise_linux:7::server', '', 'rpm');
 
 INSERT INTO feature (id, name, version, version_format, type) VALUES
   (1, 'ourchat', '0.5', 'dpkg', 1),
@@ -16,7 +16,8 @@ INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
   (1, 1, 1), -- ourchat 0.5, debian:7
   (2, 2, 1), -- openssl 1.0, debian:7
   (3, 2, 2), -- openssl 1.0, debian:8
-  (4, 3, 1); -- openssl 2.0, debian:7
+  (4, 3, 1), -- openssl 2.0, debian:7
+  (5, 4, 4); -- fake 2.0, cpe:/o:redhat:enterprise_linux:7::server
 
 INSERT INTO detector(id, name, version, dtype) VALUES
   (1, 'os-release', '1.0', 'namespace'),
@@ -48,8 +49,10 @@ INSERT INTO layer_feature(id, layer_id, feature_id, detector_id) VALUES
   (4, 3, 3, 2), -- layer-2: openssl 2.0
   (5, 5, 1, 2), -- layer-3b: ourchat 0.5
   (6, 5, 2, 2), -- layer-3b: openssl 1.0
-  (7, 6, 4, 3), -- layer-4: fake 2.0
-  (8, 6, 3, 2); -- layer-4: openssl 2.0
+  (7, 6, 4, 3); -- layer-4: fake 2.0
+
+INSERT INTO layer_feature(id, layer_id, feature_id, namespace_id, detector_id) VALUES
+  (8, 6, 3, 4, 2); -- layer-4: cpe:/o:redhat:enterprise_linux:7::server, openssl 2.0
 
 INSERT INTO layer_detector(layer_id, detector_id) VALUES
   (1, 1),

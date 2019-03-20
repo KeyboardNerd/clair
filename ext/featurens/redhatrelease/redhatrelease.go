@@ -54,7 +54,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		r = oracleReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
 			return &database.Namespace{
-				Name:          strings.ToLower(r[1]) + ":" + r[3],
+				Name:          strings.ToLower(r[1]),
+				Version:       r[3],
 				VersionFormat: rpm.ParserName,
 			}, nil
 		}
@@ -64,7 +65,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		if len(r) == 4 {
 			// TODO(vbatts): this is a hack until https://github.com/coreos/clair/pull/193
 			return &database.Namespace{
-				Name:          "centos" + ":" + r[3],
+				Name:          "centos",
+				Version:       r[3],
 				VersionFormat: rpm.ParserName,
 			}, nil
 		}
@@ -73,7 +75,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		r = centosReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
 			return &database.Namespace{
-				Name:          strings.ToLower(r[1]) + ":" + r[3],
+				Name:          strings.ToLower(r[1]),
+				Version:       r[3],
 				VersionFormat: rpm.ParserName,
 			}, nil
 		}

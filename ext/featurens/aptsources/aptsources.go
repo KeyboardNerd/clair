@@ -80,7 +80,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 
 	if OS != "" && version != "" {
 		return &database.Namespace{
-			Name:          OS + ":" + version,
+			Name:          OS,
+			Version:       version,
 			VersionFormat: dpkg.ParserName,
 		}, nil
 	}

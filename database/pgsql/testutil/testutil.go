@@ -40,24 +40,69 @@ func TakeLayerPointerFromMap(m map[int]database.Layer, id int) *database.Layer {
 	return &x
 }
 
-func ListNamespaces(t *testing.T, tx *sql.Tx) []database.Namespace {
-	rows, err := tx.Query("SELECT name, version_format FROM namespace")
+func ListNamespaces(tx *sql.Tx) []database.Namespace {
+	rows, err := tx.Query("SELECT name, version, version_format FROM namespace")
 	if err != nil {
-		t.FailNow()
+		panic(err)
 	}
 	defer rows.Close()
 
 	namespaces := []database.Namespace{}
 	for rows.Next() {
 		var ns database.Namespace
-		err := rows.Scan(&ns.Name, &ns.VersionFormat)
+		err := rows.Scan(&ns.Name, &ns.Version, &ns.VersionFormat)
 		if err != nil {
-			t.FailNow()
+			panic(err)
 		}
+
 		namespaces = append(namespaces, ns)
 	}
 
 	return namespaces
+}
+
+func ListNamespacedFeatures(t *testing.T, tx *sql.Tx) []database.NamespacedFeature {
+	rows, err := tx.Query(`SELECT f.name, f.version, f.version_format, f.type, n.name, n.version, n.version_format
+	FROM feature AS f, namespace AS n, namespaced_feature AS nf
+	WHERE nf.feature_id = f.id AND nf.namespace_id = n.id`)
+	if err != nil {
+		panic(err)
+	}
+
+	nf := []database.NamespacedFeature{}
+	for rows.Next() {
+		f := database.NamespacedFeature{}
+		var typeID int
+		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat, &typeID, &f.Namespace.Name, &f.Namespace.Version, &f.Namespace.VersionFormat)
+		if err != nil {
+			panic(err)
+		}
+
+		f.Type = RealFeatureType[typeID]
+		nf = append(nf, f)
+	}
+
+	return nf
+}
+
+func SelectAllFeatures(t *testing.T, tx *sql.Tx) []database.Feature {
+	rows, err := tx.Query("SELECT name, version, version_format, type FROM feature")
+	if err != nil {
+		t.FailNow()
+	}
+
+	fs := []database.Feature{}
+	for rows.Next() {
+		f := database.Feature{}
+		var typeID int
+		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat, &typeID)
+		f.Type = RealFeatureType[typeID]
+		if err != nil {
+			t.FailNow()
+		}
+		fs = append(fs, f)
+	}
+	return fs
 }
 
 func mustUnmarshalToken(key pagination.Key, token pagination.Token) page.Page {
@@ -87,6 +132,7 @@ func GenRandomNamespaces(t *testing.T, count int) []database.Namespace {
 	for i := 0; i < count; i++ {
 		r[i] = database.Namespace{
 			Name:          fmt.Sprint(rand.Int()),
+			Version:       fmt.Sprint(rand.Int()),
 			VersionFormat: "dpkg",
 		}
 	}

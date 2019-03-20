@@ -56,7 +56,7 @@ func HandleError(desc string, err error) error {
 	logrus.WithError(err).WithField("Description", desc).Error("database: handled database error")
 	monitoring.PromErrorsTotal.WithLabelValues(desc).Inc()
 	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
-		return database.ErrBackendException
+		return database.NewStorageErrorWithInternalError("an error occurred when querying the backend", err)
 	}
 
 	return err

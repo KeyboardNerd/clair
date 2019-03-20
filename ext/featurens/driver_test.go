@@ -49,8 +49,8 @@ BUG_REPORT_URL="https://bugs.debian.org/"`),
 			"etc/alpine-release": []byte(`3.3.4`),
 		},
 		out: []database.LayerNamespace{
-			{database.Namespace{"debian:8", "dpkg"}, database.NewNamespaceDetector("os-release", "1.0")},
-			{database.Namespace{"alpine:v3.3", "dpkg"}, database.NewNamespaceDetector("alpine-release", "1.0")},
+			{database.Namespace{"debian", "8", "dpkg"}, database.NewNamespaceDetector("os-release", "1.0")},
+			{database.Namespace{"alpine", "v3.3", "dpkg"}, database.NewNamespaceDetector("alpine-release", "1.0")},
 		},
 	},
 }

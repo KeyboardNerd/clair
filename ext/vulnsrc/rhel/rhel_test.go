@@ -48,7 +48,8 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 		{
 			FeatureType: affectedType,
 			Namespace: database.Namespace{
-				Name:          "centos:6",
+				Name:          "centos",
+				Version:       "6",
 				VersionFormat: rpm.ParserName,
 			},
 			FeatureName:     "firefox",
@@ -58,7 +59,8 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 		{
 			FeatureType: affectedType,
 			Namespace: database.Namespace{
-				Name:          "centos:7",
+				Name:          "centos",
+				Version:       "7",
 				VersionFormat: rpm.ParserName,
 			},
 			FeatureName:     "firefox",
@@ -98,7 +100,8 @@ func TestRHELParserOneCVE(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "centos:7",
+					Name:          "centos",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c",
@@ -108,7 +111,8 @@ func TestRHELParserOneCVE(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "centos:7",
+					Name:          "centos",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c-devel",
@@ -118,7 +122,8 @@ func TestRHELParserOneCVE(t *testing.T) {
 			{
 				FeatureType: affectedType,
 				Namespace: database.Namespace{
-					Name:          "centos:7",
+					Name:          "centos",
+					Version:       "7",
 					VersionFormat: rpm.ParserName,
 				},
 				FeatureName:     "xerces-c-doc",
