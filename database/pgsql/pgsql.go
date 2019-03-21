@@ -22,6 +22,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/coreos/clair/database/pgsql/namespace"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/hashicorp/golang-lru"
@@ -170,6 +172,8 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 		pg.cache, _ = lru.NewARC(pg.config.CacheSize)
 	}
 
+	namespace.Register(pg.DB)
+
 	return &pg, nil
 }
 
@@ -250,4 +254,9 @@ func dropDatabase(source, dbName string) error {
 	}
 
 	return nil
+}
+
+func AddNamespace(n database.Namespace) error {
+	_, err := namespace.Add(n)
+	return err
 }

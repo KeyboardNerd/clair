@@ -123,17 +123,7 @@ func PersistFeaturesAndCommit(datastore Datastore, features []Feature) error {
 // PersistNamespacesAndCommit wraps session PersistNamespaces function with
 // begin and commit.
 func PersistNamespacesAndCommit(datastore Datastore, namespaces []Namespace) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := tx.PersistNamespaces(namespaces); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return nil
 }
 
 // FindAncestryAndRollback wraps session FindAncestry function with begin and
